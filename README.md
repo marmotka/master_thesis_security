@@ -1,62 +1,86 @@
-# security.demo
+Quarkus Security with JPA
+========================
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+This guide demonstrates how your Quarkus application can use a database and JPA to store your user identities.
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+## Run quickstart in developer mode
 
-## Running the application in dev mode
+Quarkus provides developer mode, in which you can try this example. Just try:
 
-You can run your application in dev mode that enables live coding using:
-
-```shell script
-./mvnw quarkus:dev
+```bash
+mvn quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+Now the application will listen on `localhost:8080`.
+In developer mode quarkus will also start its own postgres database.
 
-## Packaging and running the application
+## Run quickstart in JVM mode
 
-The application can be packaged using:
+### Start the database
 
-```shell script
-./mvnw package
+Now we need to start a [PostgreSQL](https://www.postgresql.org) database on our own.
+To set it up with docker:
+
+```bash
+docker run -it --rm=true --name quarkus_test -e POSTGRES_USER=quarkus -e POSTGRES_PASSWORD=quarkus -e POSTGRES_DB=quarkus -p 5432:5432 postgres:15.3
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+Once the database is up, you can start your Quarkus application.
+Application will fill in the users and their credentials on `StartupEvent`.
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+### Start the application
 
-If you want to build an _über-jar_, execute the following command:
+The application can be build & started using:
 
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+```bash
+mvn clean package
+java -jar target/quarkus-app/quarkus-run.jar 
+```  
+
+## Test the application
+
+### From  the CLI
+The application exposes 3 endpoints:
+* `/api/public`
+* `/api/admin`
+* `/api/users/me`
+
+You can try these endpoints with a http client (`curl`, `HTTPie`, etc).
+Here you have some examples to check the security configuration:
+
+```bash
+curl -i -X GET http://localhost:8080/api/public  # 'public'
+curl -i -X GET http://localhost:8080/api/admin  # unauthorized
+curl -i -X GET -u admin:admin http://localhost:8080/api/admin # 'admin'
+curl -i -X GET http://localhost:8080/api/users/me # 'unauthorized'
+curl -i -X GET -u user:user http://localhost:8080/api/users/me # 'user'
 ```
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+### Integration testing
 
-## Creating a native executable
+We have provided integration tests based on [Dev Services for PostgreSQL](https://quarkus.io/guides/dev-services#databases) to verify the security configuration in JVM and native modes. The test and dev modes containers will be launched automatically because all the PostgreSQL configuration properties are only enabled in production (`prod`) mode.
 
-You can create a native executable using:
 
-```shell script
-./mvnw package -Dnative
+The test can be executed using:
+
+```bash
+# JVM mode
+mvn test
+
+# Native mode
+mvn verify -Pnative
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+## Running in native
 
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
+You can compile the application into a native binary using:
 
-You can then execute your native executable with: `./target/security.demo-1.0.0-SNAPSHOT-runner`
+`mvn clean package -Pnative`
 
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
+_Note: You need to have a proper GraalVM configuration to build a native binary._
 
-## Provided Code
+and run with:
 
-### REST
+`./target/security-jpa-quickstart-1.0.0-SNAPSHOT-runner`
 
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+_NOTE:_ Don't forget to start the database.

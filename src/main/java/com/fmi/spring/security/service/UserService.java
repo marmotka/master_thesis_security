@@ -20,12 +20,13 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-    @Autowired private UserRepository userRepository;
-    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtUtils jwtUtils;
 
-    // Register a new user
     public ResponseEntity<?> register(RegisterRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Username already exists");
@@ -41,7 +42,6 @@ public class UserService {
         return ResponseEntity.ok("User registered successfully");
     }
 
-    // Authenticate user and generate JWT
     public ResponseEntity<?> authenticate(LoginRequest request) {
         Optional<User> userOpt = userRepository.findByUsername(request.getUsername());
         if (userOpt.isEmpty()) {
@@ -63,12 +63,10 @@ public class UserService {
         return ResponseEntity.ok(new LoginResponse(token));
     }
 
-    // Fetch all users (for admin)
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    // Fetch user by username
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow();
     }

@@ -1,11 +1,13 @@
 package com.fmi.spring.security.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "tasks")
+@Data
 public class Task {
 
     @Id

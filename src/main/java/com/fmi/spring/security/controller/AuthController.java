@@ -2,8 +2,6 @@ package com.fmi.spring.security.controller;
 
 import com.fmi.spring.security.dto.LoginRequest;
 import com.fmi.spring.security.dto.RegisterRequest;
-import com.fmi.spring.security.model.User;
-import com.fmi.spring.security.security.JwtUtils;
 import com.fmi.spring.security.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

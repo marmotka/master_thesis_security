@@ -1,14 +1,11 @@
 package com.fmi.spring.security.controller;
 
-import com.fmi.spring.security.dto.LoginRequest;
 import com.fmi.spring.security.dto.RegisterRequest;
+import com.fmi.spring.security.model.User;
 import com.fmi.spring.security.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping
@@ -17,14 +14,21 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        return userService.register(request);
+    @GetMapping("/register")
+    public String showRegisterPage(Model model) {
+        model.addAttribute("user", new User());
+        return "register";
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        return userService.authenticate(request);
+    @PostMapping("/register")
+    public String registerUser(@ModelAttribute RegisterRequest request) {
+        userService.register(request);
+        return "redirect:/login";
+    }
+
+    @GetMapping("/login")
+    public String showLoginPage() {
+        return "login";
     }
 }
 

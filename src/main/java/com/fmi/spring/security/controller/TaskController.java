@@ -2,6 +2,7 @@ package com.fmi.spring.security.controller;
 
 import com.fmi.spring.security.model.Task;
 import com.fmi.spring.security.service.TaskService;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -15,15 +16,48 @@ public class TaskController {
     @Autowired
     private TaskService taskService;
 
-    @GetMapping
-    public List<Task> getTasks(Authentication auth) {
-        return taskService.getTasksForUser(auth.getName());
+
+    @GetMapping("/tasks/view")
+    public String getTasks(Model model, Authentication auth) {
+        var tasks = taskService.getTasksForUser(auth.getName());
+        model.addAttribute("tasks", tasks);
+        return "tasks"; // Looks for templates/tasks.html
     }
 
-    @PostMapping
-    public Task createTask(@RequestBody Task task, Authentication auth) {
-        return taskService.createTask(task, auth.getName());
+    // Show form for new task
+    @GetMapping("/new")
+    public String showCreateForm(Model model) {
+        model.addAttribute("task", new Task());
+        return "task_form"; // templates/task_form.html
     }
+
+    // Show form for editing task
+    @GetMapping("/edit/{id}")
+    public String showEditForm(@PathVariable Long id, Model model, Authentication auth) {
+        Task task = taskService.getTasksForUser(auth.getName())
+                .stream()
+                .filter(t -> t.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        model.addAttribute("task", task);
+        return "task_form";
+    }
+
+    // Handle saving (same form for create & update)
+    @PostMapping
+    public String saveTask(@ModelAttribute Task task, Authentication auth) {
+        if (task.getId() == null) {
+            taskService.createTask(task, auth.getName());
+        } else {
+            taskService.updateTask(task.getId(), task, auth.getName());
+        }
+        return "redirect:/tasks/view";
+    }
+
+//    @PostMapping
+//    public Task createTask(@RequestBody Task task, Authentication auth) {
+//        return taskService.createTask(task, auth.getName());
+//    }
 
     @PutMapping("/{id}")
     public Task updateTask(@PathVariable Long id, @RequestBody Task task, Authentication auth) {
@@ -31,7 +65,9 @@ public class TaskController {
     }
 
      @DeleteMapping("/{id}")
-    public void deleteTask(@PathVariable Long id, Authentication auth) {
+    public String deleteTask(@PathVariable Long id, Authentication auth) {
         taskService.deleteTask(id, auth.getName());
+        //todo show result of deletion
+         return "redirect:/tasks/view";
     }
 }

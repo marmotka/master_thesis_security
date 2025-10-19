@@ -12,6 +12,8 @@ import io.jsonwebtoken.Claims;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.util.Date;
 
 @Component
@@ -20,14 +22,15 @@ public class JwtUtils {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    @Value("${jwt.expiration}")
-    private long jwtExpirationMs;
+    //todo fix later to use val instead of hardcoded
+//    @Value("${jwt.expiration}")
+//    private String jwtExpirationMs;
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(UserDetails userDetails) throws ParseException {
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .claim("roles", userDetails.getAuthorities())

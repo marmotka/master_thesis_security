@@ -1,0 +1,29 @@
+Register
+
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"username":"alice","email":"a@ex.com","password":"Secret123"}' \
+  http://localhost:8080/api/auth/register
+
+
+Login → receive token
+
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"username":"alice","password":"Secret123"}' \
+  http://localhost:8080/api/auth/login
+
+
+Response:
+
+{"token":"eyJhbGciOiJI..."}
+
+
+Create task
+
+curl -X POST -H "Authorization: Bearer eyJhbGci..." -H "Content-Type: application/json" \
+  -d '{"title":"Pay rent","description":"Pay by 5th","dueDate":"2025-11-05","status":"PENDING"}' \
+  http://localhost:8080/api/tasks
+
+
+Get tasks
+
+curl -H "Authorization: Bearer eyJhbGci..." http://localhost:8080/api/tasks

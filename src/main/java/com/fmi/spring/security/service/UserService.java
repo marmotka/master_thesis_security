@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,7 +60,12 @@ public class UserService {
                 .roles(user.getRole().name())
                 .build();
 
-        String token = jwtUtils.generateToken(userDetails);
+        String token;
+        try {
+            token = jwtUtils.generateToken(userDetails);
+        } catch (ParseException e) {
+            return ResponseEntity.internalServerError().build();
+        }
         return ResponseEntity.ok(new LoginResponse(token));
     }
 

@@ -2,6 +2,7 @@ package com.fmi.spring.security.controller;
 
 import com.fmi.spring.security.model.Task;
 import com.fmi.spring.security.service.TaskService;
+import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,7 @@ import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/tasks")
 public class TaskController {
 

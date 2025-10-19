@@ -4,10 +4,11 @@ import com.fmi.spring.security.dto.RegisterRequest;
 import com.fmi.spring.security.model.User;
 import com.fmi.spring.security.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
+@Controller
 @RequestMapping
 public class AuthController {
 
@@ -29,6 +30,12 @@ public class AuthController {
     @GetMapping("/login")
     public String showLoginPage() {
         return "login";
+    }
+
+    @PostMapping("/login")
+    public String loginUser(@ModelAttribute RegisterRequest request) {
+           //todo
+        return "redirect:/login";
     }
 }
 

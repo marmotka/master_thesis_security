@@ -12,7 +12,14 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h3 class="card-title mb-4">Login</h3>
+
+                    <!-- Error message -->
+                    <div th:if="${errorMessage}" class="message error" th:text="${errorMessage}"></div>
+                    <!-- Success message -->
+                    <div th:if="${successMessage}" class="message success" th:text="${successMessage}"></div>
+
                     <form th:action="@{/login}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
                             <input type="text" name="username" class="form-control" required>
@@ -24,6 +31,8 @@
                         <button type="submit" class="btn btn-primary w-100">Login</button>
                         <p class="mt-3 text-center">Don't have an account? <a th:href="@{/register}">Register</a></p>
                     </form>
+                    <p th:if="${error}" th:text="${error}" style="color:red;"></p>
+                    <p th:if="${message}" th:text="${message}" style="color:green;"></p>
                 </div>
             </div>
         </div>

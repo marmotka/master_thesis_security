@@ -1,4 +1,4 @@
-package com.fmi.spring.security.api;
+package com.fmi.spring.security.controller.api;
 
 import com.fmi.spring.security.dto.TaskDto;
 import com.fmi.spring.security.model.Task;

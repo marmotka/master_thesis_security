@@ -21,8 +21,10 @@ WORKDIR /app
 # Copy the fat JAR from the build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Expose app port
-EXPOSE 8080
+# Expose the normal web port and the debug port
+EXPOSE 8080 5005
 
-# Run app
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Optional: allow dynamic debug mode
+ENV DEBUG_OPTS=""
+
+ENTRYPOINT ["sh", "-c", "java $DEBUG_OPTS -jar app.jar"]

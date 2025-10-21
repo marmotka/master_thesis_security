@@ -8,6 +8,33 @@
 <body class="bg-light">
 <div class="container mt-4">
     <h2>My Tasks</h2>
+
+    <div th:if="${message}"
+         th:class="'alert alert-' + (${messageType} == null ? 'info' : messageType)"
+         role="alert"
+         style="margin-bottom: 1rem;">
+        <span th:text="${message}"></span>
+    </div>
+
+    <!--    &lt;!&ndash; Show user info if logged in &ndash;&gt;-->
+    <!--    <div sec:authorize="isAuthenticated()">-->
+    <!--        <span>Welcome, <b sec:authentication="name"></b>!</span>-->
+    <!--        <form th:action="@{/logout}" method="post" style="display:inline;">-->
+    <!--            <button type="submit" class="logout-btn">Logout</button>-->
+    <!--        </form>-->
+    <!--    </div>-->
+    <!--</div>-->
+
+    <!--&lt;!&ndash; Show different content based on role &ndash;&gt;-->
+    <!--<div sec:authorize="hasRole('ADMIN')">-->
+    <!--    <p><strong>Admin panel:</strong> You can manage all tasks.</p>-->
+    <!--</div>-->
+
+    <!--<div sec:authorize="hasRole('USER')">-->
+    <!--    <p>You are logged in as a regular user.</p>-->
+    <!--</div>-->
+
+
     <a class="btn btn-primary mb-3" th:href="@{/tasks/new}">Add New Task</a>
     <table class="table table-hover bg-white shadow-sm">
         <thead>
@@ -27,7 +54,12 @@
             <td th:text="${task.status}"></td>
             <td>
                 <a th:href="@{'/tasks/edit/' + ${task.id}}" class="btn btn-sm btn-warning">Edit</a>
-                <a th:href="@{'/tasks/delete/' + ${task.id}}" class="btn btn-sm btn-danger">Delete</a>
+                <form th:action="@{'/tasks/' + ${task.id}}" method="post" style="display:inline;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <input type="hidden" name="_method" value="delete"/>
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
             </td>
         </tr>
         </tbody>
@@ -35,3 +67,12 @@
 </div>
 </body>
 </html>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const alertBox = document.querySelector(".alert");
+      if (alertBox) {
+        setTimeout(() => alertBox.style.display = "none", 3000);
+      }
+    });
+</script>

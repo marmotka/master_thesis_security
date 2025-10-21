@@ -1,4 +1,4 @@
-package com.fmi.spring.security.controller;
+package com.fmi.spring.security.controller.web;
 
 import com.fmi.spring.security.model.Task;
 import com.fmi.spring.security.service.TaskService;
@@ -7,8 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
-
-import java.util.List;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/tasks")
@@ -18,7 +17,7 @@ public class TaskController {
     private TaskService taskService;
 
 
-    @GetMapping("/tasks/view")
+    @GetMapping("/view")
     public String getTasks(Model model, Authentication auth) {
         var tasks = taskService.getTasksForUser(auth.getName());
         model.addAttribute("tasks", tasks);
@@ -46,12 +45,15 @@ public class TaskController {
 
     // Handle saving (same form for create & update)
     @PostMapping
-    public String saveTask(@ModelAttribute Task task, Authentication auth) {
+    public String saveTask(@ModelAttribute Task task, Authentication auth, RedirectAttributes redirectAttributes) {
         if (task.getId() == null) {
             taskService.createTask(task, auth.getName());
+            redirectAttributes.addFlashAttribute("message", "Task created successfully!");
         } else {
             taskService.updateTask(task.getId(), task, auth.getName());
+            redirectAttributes.addFlashAttribute("message", "Task updated successfully!");
         }
+        redirectAttributes.addFlashAttribute("messageType", "success");
         return "redirect:/tasks/view";
     }
 
@@ -60,15 +62,18 @@ public class TaskController {
 //        return taskService.createTask(task, auth.getName());
 //    }
 
-    @PutMapping("/{id}")
+    @PutMapping("/edit/{id}")
     public Task updateTask(@PathVariable Long id, @RequestBody Task task, Authentication auth) {
         return taskService.updateTask(id, task, auth.getName());
     }
 
      @DeleteMapping("/{id}")
-    public String deleteTask(@PathVariable Long id, Authentication auth) {
+    public String deleteTask(@PathVariable Long id, Authentication auth, RedirectAttributes redirectAttributes) {
         taskService.deleteTask(id, auth.getName());
-        //todo show result of deletion
+
+         redirectAttributes.addFlashAttribute("message", "Task deleted successfully!");
+         redirectAttributes.addFlashAttribute("messageType", "success");
+
          return "redirect:/tasks/view";
     }
 }

@@ -14,20 +14,30 @@ services:
       - pgdata:/var/lib/postgresql/data
     networks:
       - tasknet
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      interval: 5s
+      retries: 5
 
 
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: taskmanager-app
+
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/taskmanager
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      # toggle debug mode ON/OFF by commenting/uncommenting this:
+      DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
       JWT_SECRET: supersecretjwtkey123456789
     depends_on:
       - postgres
     ports:
-      - "8080:8080"
+      - "8080:8080"   # app port
+      - "5005:5005"   # debug port
     networks:
       - tasknet
 

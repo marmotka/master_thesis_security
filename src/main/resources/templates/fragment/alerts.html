@@ -1,0 +1,74 @@
+<!-- fragment/alerts.html -->
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="alertMessages">
+
+    <!-- Generic message (message + messageType) -->
+    <div class="container-xxl">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div th:if="${message}"
+                     th:class="'alert alert-' + (${messageType} == null ? 'info' : messageType) + ' alert-dismissible fade show shadow-sm border-0 rounded-3 alert-banner'"
+                     role="alert">
+                    <i class="bi"
+                       th:classappend="${messageType == 'success' ? ' bi-check-circle-fill alert-icon-success' :
+                                       messageType == 'danger'  ? ' bi-exclamation-triangle-fill alert-icon-danger' :
+                                       messageType == 'warning' ? ' bi-exclamation-circle-fill alert-icon-warning' :
+                                                                  ' bi-info-circle alert-icon-info'}"></i>
+                    <span class="alert-text" th:text="${message}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Specific message cases -->
+    <div class="container-xxl">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div th:if="${successMessage}"
+                     class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 alert-banner"
+                     role="alert">
+                    <i class="bi bi-check-circle-fill alert-icon-success"></i>
+                    <span class="alert-text" th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div th:if="${errorMessage}"
+                     class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 alert-banner"
+                     role="alert">
+                    <i class="bi bi-exclamation-triangle-fill alert-icon-danger"></i>
+                    <span class="alert-text" th:text="${errorMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div th:if="${error}"
+                     class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 alert-banner"
+                     role="alert">
+                    <i class="bi bi-exclamation-octagon alert-icon-danger"></i>
+                    <span class="alert-text" th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div th:if="${info}"
+                     class="alert alert-info alert-dismissible fade show shadow-sm border-0 rounded-3 alert-banner"
+                     role="alert">
+                    <i class="bi bi-info-circle alert-icon-info"></i>
+                    <span class="alert-text" th:text="${info}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll(".alert").forEach(alertBox => {
+                setTimeout(() => {
+                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alertBox);
+                    bsAlert.close();
+                }, 3500);
+            });
+        });
+    </script>
+</div>
+</html>

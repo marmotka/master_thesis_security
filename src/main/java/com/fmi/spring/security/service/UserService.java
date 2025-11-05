@@ -7,12 +7,17 @@ import com.fmi.spring.security.model.Role;
 import com.fmi.spring.security.model.User;
 import com.fmi.spring.security.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,7 +51,6 @@ public class UserService implements UserDetailsService {
                 .filter(user -> passwordEncoder.matches(request.getPassword(), user.getPassword()));
     }
 
-    @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -55,5 +59,42 @@ public class UserService implements UserDetailsService {
                 user.getPassword(),
                 List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
         );
+    }
+
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+
+    public void changePassword(String currentUsername, String currentPassword, String newPassword) {
+        User user = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect.");
+        }
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new IllegalArgumentException("New password must be at least 8 characters.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        // No need to refresh SecurityContext for password change.
+    }
+
+    private void refreshAuthentication(String username) {
+        // Recreate UserDetails → new Authentication token with same authorities
+        UserDetails userDetails = loadUserByUsername(username);
+        UsernamePasswordAuthenticationToken newAuth =
+                new UsernamePasswordAuthenticationToken(
+                        userDetails, userDetails.getPassword(), userDetails.getAuthorities());
+
+        // (Optional) preserve request details if present
+        Authentication current = SecurityContextHolder.getContext().getAuthentication();
+        if (current != null) {
+            newAuth.setDetails(current.getDetails());
+        }
+
+        SecurityContextHolder.getContext().setAuthentication(newAuth);
     }
 }

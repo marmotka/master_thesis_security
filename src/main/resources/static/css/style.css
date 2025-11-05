@@ -100,3 +100,8 @@ footer {
 .alert.shadow-sm {
   box-shadow: 0 0.5rem 0.75rem rgba(0,0,0,0.05);
 }
+
+/* ===== Register page ===== */
+
+.card .form-label { font-weight: 500; }
+.card .invalid-feedback { display: block; } /* show immediately with is-invalid */

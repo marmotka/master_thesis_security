@@ -82,19 +82,17 @@ public class UserService implements UserDetailsService {
         // No need to refresh SecurityContext for password change.
     }
 
-    private void refreshAuthentication(String username) {
-        // Recreate UserDetails → new Authentication token with same authorities
-        UserDetails userDetails = loadUserByUsername(username);
-        UsernamePasswordAuthenticationToken newAuth =
-                new UsernamePasswordAuthenticationToken(
-                        userDetails, userDetails.getPassword(), userDetails.getAuthorities());
-
-        // (Optional) preserve request details if present
-        Authentication current = SecurityContextHolder.getContext().getAuthentication();
-        if (current != null) {
-            newAuth.setDetails(current.getDetails());
-        }
-
-        SecurityContextHolder.getContext().setAuthentication(newAuth);
+     public List<User> findAllUsers() {
+        return userRepository.findAll();
     }
+
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    public void deleteUserById(Long id) {
+        userRepository.deleteById(id);
+    }
+
+
 }

@@ -37,6 +37,7 @@ private final PasswordEncoder passwordEncoder;
                         // Public endpoints
                         .requestMatchers("/login", "/register", "/api/auth/register", "/api/auth/login", "/css/**").permitAll()
                         // Roles required
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
                         // API routes must use JWT

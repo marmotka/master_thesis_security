@@ -1,0 +1,67 @@
+{#include fragment/base}
+{#title}My Tasks{/title}
+{#content}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-semibold text-primary mb-0">My Tasks</h2>
+    <a class="btn btn-primary shadow-sm" href="/tasks/new">
+        <i class="bi bi-plus-circle me-1"></i> Add New Task
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover bg-white">
+                <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {#for t in tasks}
+                <tr>
+                    <td>{t.title}</td>
+                    <td>{t.description}</td>
+                    <td>{t.dueDate}</td>
+                    <td>
+                        {#if t.status == 'DONE'}
+                        <span class="badge bg-success task-badge">DONE</span>
+                        {#elseif t.status == 'PENDING'}
+                        <span class="badge bg-primary task-badge">PENDING</span>
+                        {#elseif t.status == 'IN_PROGRESS'}
+                        <span class="badge bg-warning text-dark task-badge">IN_PROGRESS</span>
+                        {#else}
+                        <span class="badge bg-secondary task-badge">{t.status}</span>
+                        {/if}
+                    </td>
+                    <td class="text-end">
+                        <a href="/tasks/edit/{t.id}" class="btn btn-sm btn-outline-warning btn-action">
+                            <i class="bi bi-pencil-square"></i> Edit
+                        </a>
+
+                        <!-- Hidden delete form + modal trigger (optional: reuse your modal pattern) -->
+                        <form id="deleteForm-{t.id}" action="/tasks/{t.id}/delete" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger btn-action">
+                                <i class="bi bi-trash3"></i> Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {/for}
+
+                {#if tasks.isEmpty}
+                <tr><td colspan="5" class="text-center text-muted py-4">No tasks yet.</td></tr>
+                {/if}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{/content}
+{/include}

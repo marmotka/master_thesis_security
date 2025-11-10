@@ -11,9 +11,5 @@ import io.quarkus.runtime.StartupEvent;
 public class Startup {
     @Transactional
     public void loadUsers(@Observes StartupEvent evt) {
-        // reset and load all test users
-        User.deleteAll();
-        User.add("admin", "admin", "admin");
-        User.add("user", "user", "user");
     }
 }

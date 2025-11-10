@@ -1,0 +1,40 @@
+{#include fragment/base}
+{#title}Login{/title}
+{#content}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="card-title mb-4">Login</h3>
+
+                {#if error}
+                <div class="alert alert-danger alert-banner">
+                    <i class="bi bi-exclamation-triangle-fill alert-icon-danger"></i>
+                    <span class="alert-text">{error}</span>
+                </div>
+                {/if}
+                {#if message}
+                <div class="alert alert-success alert-banner">
+                    <i class="bi bi-check-circle-fill alert-icon-success"></i>
+                    <span class="alert-text">{message}</span>
+                </div>
+                {/if}
+
+                <form action="/j_security_check" method="post" autocomplete="off">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input name="j_username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input name="j_password" type="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                    <p class="mt-3 text-center">Don't have an account? <a href="/register">Register</a></p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{/content}
+{/include}

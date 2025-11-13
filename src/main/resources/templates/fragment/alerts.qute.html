@@ -1,43 +1,35 @@
-<!-- Generic flash/message banner -->
-{#if message}
+<!-- Info -->
+{#if message??}
+{#if message != '' }
 <div class="alert alert-info alert-dismissible fade show shadow-sm border-0 rounded-3 mb-3 alert-banner" role="alert">
     <i class="bi bi-info-circle alert-icon-info"></i>
     <span class="alert-text">{message}</span>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 {/if}
+{/if}
 
-{#if successMessage}
-<div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-3 alert-banner" role="alert">
+<!-- Success -->
+{#if successMessage??}
+{#if successMessage != '' }
+<div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-3 alert-banner"
+     role="alert">
     <i class="bi bi-check-circle-fill alert-icon-success"></i>
     <span class="alert-text">{successMessage}</span>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 {/if}
+{/if}
 
-{#if errorMessage}
+<!-- Error -->
+{#if errorMessage??}
+{#if errorMessage != '' }
 <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 mb-3 alert-banner" role="alert">
     <i class="bi bi-exclamation-triangle-fill alert-icon-danger"></i>
     <span class="alert-text">{errorMessage}</span>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 {/if}
-
-<!-- Optional extras if you still use these keys -->
-{#if error}
-<div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 mb-3 alert-banner" role="alert">
-    <i class="bi bi-exclamation-octagon alert-icon-danger"></i>
-    <span class="alert-text">{error}</span>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
-{/if}
-
-{#if info}
-<div class="alert alert-info alert-dismissible fade show shadow-sm border-0 rounded-3 mb-3 alert-banner" role="alert">
-    <i class="bi bi-info-circle alert-icon-info"></i>
-    <span class="alert-text">{info}</span>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
 {/if}
 
 <script>

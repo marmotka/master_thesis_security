@@ -31,11 +31,9 @@
                     <td>
                         {#if t.status == 'DONE'}
                         <span class="badge bg-success task-badge">DONE</span>
-                        {#elseif t.status == 'PENDING'}
+                        {:elseif t.status == 'PENDING'}
                         <span class="badge bg-primary task-badge">PENDING</span>
-                        {#elseif t.status == 'IN_PROGRESS'}
-                        <span class="badge bg-warning text-dark task-badge">IN_PROGRESS</span>
-                        {#else}
+                        {:else}
                         <span class="badge bg-secondary task-badge">{t.status}</span>
                         {/if}
                     </td>
@@ -55,7 +53,9 @@
                 {/for}
 
                 {#if tasks.isEmpty}
-                <tr><td colspan="5" class="text-center text-muted py-4">No tasks yet.</td></tr>
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">No tasks yet.</td>
+                </tr>
                 {/if}
                 </tbody>
             </table>

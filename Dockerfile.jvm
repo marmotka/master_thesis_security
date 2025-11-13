@@ -1,0 +1,21 @@
+# 1) Build stage
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /workspace
+
+# Now copies from root context (pom.xml, src/, etc.)
+COPY . .
+
+# DEBUG: List files to verify pom.xml is there
+RUN ls -la /workspace
+
+# Produce the "fast-jar" layout
+RUN mvn -B -DskipTests -Dquarkus.profile=prod package
+
+# 2) Runtime
+FROM eclipse-temurin:21-jre-alpine
+ENV LANG=C.UTF-8
+WORKDIR /app
+COPY --from=build /workspace/target/quarkus-app /app/
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+EXPOSE 8080
+CMD ["sh", "-c", "java $JAVA_OPTS -jar /app/quarkus-run.jar"]

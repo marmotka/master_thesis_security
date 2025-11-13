@@ -1,4 +1,4 @@
-package com.fmi.quarkus.controller;
+package com.fmi.quarkus.web;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.GET;

@@ -10,11 +10,5 @@ public class PasswordService {
         return BcryptUtil.bcryptHash(raw);
     }
 
-    public boolean matches(String raw, String hash) {
-        // BCryptUtil doesn't expose matches; re-hash compare by library is not available.
-        // Use org.mindrot.jbcrypt if you prefer:
-        // return BCrypt.checkpw(raw, hash);
-        // For simplicity, we accept that authentication is handled by Security JPA provider.
-        return false;
-    }
+
 }

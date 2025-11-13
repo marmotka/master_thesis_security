@@ -1,0 +1,110 @@
+{#include fragment/base}
+{#title}Users{/title}
+{#content}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-semibold text-primary mb-0">Users</h2>
+    <span class="text-muted">Admin — manage users</span>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {#for u in users}
+                <tr>
+                    <td>{u.username}</td>
+                    <td>{u.email}</td>
+                    <td class="text-end">
+
+                        <!-- Hidden delete form (submitted after modal confirmation) -->
+                        <form id="deleteForm-{u.id}" action="/admin/users/{u.id}/delete" method="post" class="d-none"></form>
+
+                        <!-- Delete button opens modal; prevent self-delete -->
+                        {#if u.username != currentUsername}
+                        <button type="button"
+                                class="btn btn-sm btn-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#confirmDeleteModal"
+                                data-form-id="deleteForm-{u.id}"
+                                data-username="{u.username}">
+                            <i class="bi bi-trash3"></i> Delete
+                        </button>
+                        {#else}
+                        <span class="text-muted small">You</span>
+                        {/if}
+                    </td>
+                </tr>
+                {/for}
+
+                {#if users.isEmpty}
+                <tr>
+                    <td colspan="3" class="text-center text-muted py-4">No users found.</td>
+                </tr>
+                {/if}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Reusable Delete Confirmation Modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteLabel">Delete user</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <p class="mb-0">
+                    Are you sure you want to delete user <strong id="deleteUsername">this user</strong>?
+                    This action cannot be undone.
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="bi bi-trash3"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{#insert scripts}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const modalEl = document.getElementById('confirmDeleteModal');
+      const usernameEl = document.getElementById('deleteUsername');
+      const confirmBtn = document.getElementById('confirmDeleteBtn');
+      let targetFormId = null;
+
+      modalEl.addEventListener('show.bs.modal', (event) => {
+        const button = event.relatedTarget;
+        targetFormId = button?.getAttribute('data-form-id');
+        const uname = button?.getAttribute('data-username') || 'this user';
+        usernameEl.textContent = uname;
+      });
+
+      confirmBtn.addEventListener('click', () => {
+        if (!targetFormId) return;
+        const form = document.getElementById(targetFormId);
+        if (form) form.submit();
+      });
+    });
+</script>
+{/insert}
+
+{/content}
+{/include}

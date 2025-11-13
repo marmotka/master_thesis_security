@@ -7,19 +7,6 @@
             <div class="card-body">
                 <h3 class="card-title mb-4">Login</h3>
 
-                {#if error}
-                <div class="alert alert-danger alert-banner">
-                    <i class="bi bi-exclamation-triangle-fill alert-icon-danger"></i>
-                    <span class="alert-text">{error}</span>
-                </div>
-                {/if}
-                {#if message}
-                <div class="alert alert-success alert-banner">
-                    <i class="bi bi-check-circle-fill alert-icon-success"></i>
-                    <span class="alert-text">{message}</span>
-                </div>
-                {/if}
-
                 <form action="/j_security_check" method="post" autocomplete="off">
                     <div class="mb-3">
                         <label class="form-label">Username</label>

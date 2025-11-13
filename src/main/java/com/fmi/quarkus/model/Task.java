@@ -6,6 +6,7 @@ import java.time.LocalDate;
 
 @Entity
 public class Task extends PanacheEntity {
+
     @Column(nullable = false)
     public String title;
 

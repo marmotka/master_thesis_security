@@ -4,6 +4,7 @@ package com.fmi.quarkus.service;
 import com.fmi.quarkus.model.Role;
 import com.fmi.quarkus.model.User;
 import com.fmi.quarkus.security.PasswordService;
+import com.fmi.quarkus.web.AuthenticationController;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -21,13 +22,12 @@ public class UserService {
     public Optional<User> findById(Long id) { return Optional.ofNullable(User.findById(id)); }
 
     @Transactional
-    public User register(String username, String email, String rawPassword) {
-        if (User.existsByEmail(email)) throw new IllegalArgumentException("Email is already in use.");
-        if (User.existsByUsername(username)) throw new IllegalArgumentException("Username is already taken.");
+    public User register(AuthenticationController.RegisterRequest request) {
+        if (User.existsByEmail(request.email)) throw new IllegalArgumentException("Email is already in use.");
         User u = new User();
-        u.username = username;
-        u.email = email;
-        u.password = passwords.hash(rawPassword);
+        u.username = request.username;
+        u.email = request.email;
+        u.password = passwords.hash(request.password);
         u.role = Role.USER;
         u.persist();
         return u;

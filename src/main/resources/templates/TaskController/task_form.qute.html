@@ -1,0 +1,77 @@
+{#include fragment/base}
+{#title}{#if task.id}Edit Task{#else}Create Task{/if}{/title}
+{#content}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-semibold text-primary mb-0">
+        {#if task.id}Edit Task{#else}Create Task{/if}
+    </h2>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <form action="{formAction}" method="post" autocomplete="off">
+            {#if task.id}
+            <!-- hidden id for updates -->
+            <input type="hidden" name="id" value="{task.id}">
+            {/if}
+
+            <!-- Title -->
+            <div class="mb-3">
+                <label class="form-label">Title</label>
+                <input
+                        type="text"
+                        name="title"
+                        class="form-control{#if errors && errors.containsKey('title')} is-invalid{/if}"
+                        value="{task.title ?? ''}"
+                        required>
+                {#if errors && errors.containsKey('title')}
+                <div class="invalid-feedback">{errors.get('title')}</div>
+                {/if}
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea
+                        name="description"
+                        class="form-control{#if errors && errors.containsKey('description')} is-invalid{/if}"
+                        rows="4">{task.description ?? ''}</textarea>
+                {#if errors && errors.containsKey('description')}
+                <div class="invalid-feedback">{errors.get('description')}</div>
+                {/if}
+            </div>
+
+            <!-- Due Date -->
+            <div class="mb-3">
+                <label class="form-label">Due Date</label>
+                <input
+                        type="date"
+                        name="dueDate"
+                        class="form-control{#if errors && errors.containsKey('dueDate')} is-invalid{/if}"
+                        value="{task.dueDate ?? ''}">
+                {#if errors && errors.containsKey('dueDate')}
+                <div class="invalid-feedback">{errors.get('dueDate')}</div>
+                {/if}
+            </div>
+
+            <!-- Status (PENDING/DONE to mirror your original form) -->
+            <div class="mb-4">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select{#if errors && errors.containsKey('status')} is-invalid{/if}">
+                    <option value="PENDING" {#if task.status == 'PENDING'}selected{/if}>PENDING</option>
+                    <option value="DONE" {#if task.status == 'DONE'}selected{/if}>DONE</option>
+                </select>
+                {#if errors && errors.containsKey('status')}
+                <div class="invalid-feedback d-block">{errors.get('status')}</div>
+                {/if}
+            </div>
+
+            <button type="submit" class="btn btn-success">Save</button>
+            <a href="/tasks/view" class="btn btn-secondary ms-2">Cancel</a>
+        </form>
+    </div>
+</div>
+
+{/content}
+{/include}

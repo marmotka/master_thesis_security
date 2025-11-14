@@ -1,0 +1,16 @@
+{#include fragment/base}
+{#title}{title ?: 'Error'}{/title}
+{#content}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4 text-center">
+                <h3 class="mb-3">{status}</h3>
+                <p class="lead">{message}</p>
+                <a href="/" class="btn btn-primary mt-3">Go home</a>
+            </div>
+        </div>
+    </div>
+</div>
+{/content}
+{/include}

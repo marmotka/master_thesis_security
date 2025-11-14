@@ -1,5 +1,6 @@
 package com.fmi.quarkus.web;
 
+import com.fmi.quarkus.exception.DuplicateEmailException;
 import com.fmi.quarkus.service.UserService;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
@@ -9,7 +10,6 @@ import io.smallrye.common.annotation.Blocking;
 import io.vertx.ext.web.RoutingContext;
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -36,7 +36,7 @@ public class AuthenticationController {
     // Qute-checked templates (compile-time safe)
     @CheckedTemplate
     public static class Tpl {
-        public static native TemplateInstance  login(String message, String error, SecurityIdentity identity);
+        public static native TemplateInstance login(String message, String error, SecurityIdentity identity);
 
         public static native TemplateInstance register(RegisterRequest request, Map<String, String> errors, String error, SecurityIdentity identity);
     }
@@ -60,8 +60,12 @@ public class AuthenticationController {
         if (!logout.isEmpty()) {
             message = "You have been logged out successfully.";
         }
+        if (error != null && error.matches("true")) {
+            error = "Invalid username or password";
+        }
 
-        return Tpl.login(message, error, identity);
+        return Tpl.login(message, error, identity)
+                .data("errorMessage", error);
     }
 
 
@@ -90,8 +94,13 @@ public class AuthenticationController {
         if (!errors.isEmpty())
             return Tpl.register(request, errors, null, identity);
 
-        userService.register(request);
-        return Tpl.login("Registration successful, please log in.", null, identity);
+        try {
+            userService.register(request);
+        } catch (DuplicateEmailException ex) {
+            errors.put("email", ex.getMessage());
+            return Tpl.register(request, errors, null, identity);
+        }
+        return Tpl.login("Registration successful. Please sign in.", null, identity);
     }
 
     // ----- LOGOUT -----
@@ -103,11 +112,12 @@ public class AuthenticationController {
         // Destroy Vert.x web session if present
         try {
             if (rc.session() != null) rc.session().destroy();
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
 
         // Expire auth cookies set by Quarkus form auth
-        String expireCred   = "quarkus-credential=; Max-Age=0; Path=/; HttpOnly; SameSite=Strict";
-        String expireRedir  = "quarkus-redirect-location=; Max-Age=0; Path=/; SameSite=Strict";
+        String expireCred = "quarkus-credential=; Max-Age=0; Path=/; HttpOnly; SameSite=Strict";
+        String expireRedir = "quarkus-redirect-location=; Max-Age=0; Path=/; SameSite=Strict";
 
         return Response.seeOther(URI.create("/login?logout=true"))
                 .header("Set-Cookie", expireCred)
@@ -118,9 +128,13 @@ public class AuthenticationController {
 
     // ----- Simple form DTO bound from x-www-form-urlencoded -----
     public static class RegisterRequest {
-        @FormParam("username") public String username;
-        @FormParam("email") public String email;
-        @FormParam("password") public String password;
-        @FormParam("confirmPassword") public String confirmPassword;
+        @FormParam("username")
+        public String username;
+        @FormParam("email")
+        public String email;
+        @FormParam("password")
+        public String password;
+        @FormParam("confirmPassword")
+        public String confirmPassword;
     }
 }

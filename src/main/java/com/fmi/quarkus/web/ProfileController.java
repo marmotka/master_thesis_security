@@ -1,5 +1,7 @@
 package com.fmi.quarkus.web;
 
+import com.fmi.quarkus.exception.PasswordChangeException;
+import com.fmi.quarkus.service.ChangePasswordRequest;
 import com.fmi.quarkus.service.UserService;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
@@ -8,58 +10,89 @@ import io.smallrye.common.annotation.Blocking;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.SecurityContext;
-import org.jboss.resteasy.reactive.RestForm;   // <-- use RestForm for form fields
+import jakarta.ws.rs.core.*;
+
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 @Path("/profile")
 @Blocking
 @RolesAllowed({"USER", "ADMIN"})
 public class ProfileController {
 
+
     @Inject SecurityIdentity identity;
-    @Inject UserService users;
+    @Inject UserService userService;
 
     @CheckedTemplate
     public static class Tpl {
         public static native TemplateInstance profile(
-                String currentUsername,
-                String currentEmail,
-                java.util.Map<String, Object> passwordForm,
-                Boolean openPassword,
+                String username,
+                String email,
+                boolean openPasswordSection,
+                Map<String, String> passwordErrors,
                 SecurityIdentity identity
         );
     }
 
+
     @GET
-    @Path("view")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance view(@Context SecurityContext ctx,
-                                 @QueryParam("openPassword") @DefaultValue("false") boolean open) {
-        var u = users.findByUsername(ctx.getUserPrincipal().getName()).orElseThrow();
-        var form = new java.util.HashMap<String, Object>();
-        form.put("currentPassword", "");
-        form.put("newPassword", "");
-        form.put("confirmPassword", "");
-        return Tpl.profile(u.username, u.email, form, open, identity);
+    @Path("/view")
+    public TemplateInstance view(@QueryParam("notice") @DefaultValue("") String notice) {
+        String username = identity.getPrincipal().getName();
+        var user = userService.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        boolean openSection = false;
+        String successMessage = "";
+        String errorMessage   = "";
+
+        if ("pwChanged".equals(notice)) {
+            successMessage = "Password updated successfully.";
+        }
+
+        return Tpl.profile(user.username, user.email, openSection, Map.of(), identity)
+                .data("successMessage", successMessage)
+                .data("errorMessage", errorMessage);
+    }
+
+    // Change password
+    public static class ChangePasswordForm {
+        @FormParam("currentPassword") public String currentPassword;
+        @FormParam("newPassword")     public String newPassword;
+        @FormParam("confirmPassword") public String confirmPassword;
     }
 
     @POST
-    @Path("password")
+    @Path("/password")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response change(@RestForm String currentPassword,
-                           @RestForm String newPassword,
-                           @RestForm String confirmPassword) {
-
-        if (newPassword == null || newPassword.length() < 8 || !newPassword.equals(confirmPassword)) {
-            return Response.seeOther(java.net.URI.create("/profile/view?openPassword=true")).build();
-        }
+    public Object changePassword(@BeanParam ChangePasswordForm form) {
 
         String username = identity.getPrincipal().getName();
-        users.changePassword(username, currentPassword, newPassword);
+        var dto = new ChangePasswordRequest(
+                form.currentPassword,
+                form.newPassword,
+                form.confirmPassword
+        );
 
-        return Response.seeOther(java.net.URI.create("/profile/view")).build();
+        try {
+            userService.changePassword(username, dto);
+            // PRG pattern – no resubmit on refresh, no passwords in URL
+            return Response.seeOther(URI.create("/profile/view?notice=pwChanged")).build();
+
+        } catch (PasswordChangeException ex) {
+            var user = userService.findByUsername(username)
+                    .orElseThrow(() -> new NotFoundException("User not found"));
+
+            // Re-render profile with password section open and field errors
+            return Tpl.profile(
+                    user.username,
+                    user.email,
+                    true,                         // open password collapse
+                    ex.getFieldErrors(),
+                    identity
+            );
+        }
     }
 }

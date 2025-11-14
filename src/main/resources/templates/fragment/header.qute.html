@@ -14,18 +14,18 @@
         <!-- Links -->
         <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                {#if identity && !identity.anonymous}
+                {#if identity?? && identity != null && !identity.anonymous}
                 <li class="nav-item"><a class="nav-link" href="/tasks/view">My Tasks</a></li>
                 <li class="nav-item"><a class="nav-link" href="/profile/view">Profile</a></li>
                 {/if}
-                {#if identity && identity.roles.contains('ADMIN')}
+                {#if identity?? && identity != null  && identity.roles.contains('ADMIN')}
                 <li class="nav-item"><a class="nav-link" href="/admin/users">Admin Panel</a></li>
                 {/if}
             </ul>
 
             <!-- Right side: user + logout -->
             <div class="d-flex align-items-center">
-                {#if identity && !identity.anonymous}
+                {#if identity?? && identity != null  && !identity.anonymous}
                 <span class="text-white me-3">
             Welcome, <b>{identity.principal.name}</b>!
           </span>

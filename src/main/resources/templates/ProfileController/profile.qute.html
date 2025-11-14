@@ -15,17 +15,18 @@
                 <h5 class="card-title mb-3">Account details</h5>
                 <dl class="row mb-0">
                     <dt class="col-sm-4">Username</dt>
-                    <dd class="col-sm-8">{currentUsername}</dd>
+                    <dd class="col-sm-8">{username}</dd>
 
                     <dt class="col-sm-4">Email</dt>
-                    <dd class="col-sm-8">{currentEmail}</dd>
+                    <dd class="col-sm-8">{email}</dd>
                 </dl>
 
                 <hr class="my-4">
 
                 <button class="btn btn-primary" type="button"
                         data-bs-toggle="collapse" data-bs-target="#changePassword"
-                        aria-expanded="false" aria-controls="changePassword">
+                        aria-expanded="{openPasswordSection ? 'true' : 'false'}"
+                        aria-controls="changePassword">
                     Change password
                 </button>
             </div>
@@ -34,45 +35,68 @@
 
     <!-- Change password -->
     <div class="col-12 col-lg-6">
-        <div id="changePassword" class="collapse{#if openPassword} show{/if}">
+        <div id="changePassword" class="collapse{#if openPasswordSection} show{/if}">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title mb-3">Update password</h5>
 
                     <form id="passwordForm" action="/profile/password" method="post" autocomplete="off">
+                        <!-- Current password -->
                         <div class="mb-3">
                             <label for="currentPassword" class="form-label">Current password</label>
                             <div class="input-group">
-                                <input id="currentPassword" name="currentPassword" type="password" class="form-control"
-                                       required autocomplete="current-password" placeholder="Enter current password"
-                                       value="{passwordForm.currentPassword??}">
+                                <input id="currentPassword" name="currentPassword" type="password"
+                                       class="form-control{#if passwordErrors.containsKey('currentPassword')} is-invalid{/if}"
+                                       required autocomplete="current-password" placeholder="Enter current password">
                                 <button class="btn btn-outline-secondary" type="button"
-                                        onclick="toggleVis('currentPassword', this)">Show</button>
+                                        onclick="toggleVis('currentPassword', this)">Show
+                                </button>
                             </div>
+                            {#if passwordErrors.containsKey('currentPassword')}
+                            <div class="invalid-feedback d-block">
+                                {passwordErrors.get('currentPassword')}
+                            </div>
+                            {/if}
                         </div>
 
+                        <!-- New password -->
                         <div class="mb-3">
                             <label for="newPassword" class="form-label">New password</label>
                             <div class="input-group">
-                                <input id="newPassword" name="newPassword" type="password" class="form-control"
-                                       required minlength="8" autocomplete="new-password" placeholder="Min 8 characters"
-                                       value="{passwordForm.newPassword??}">
+                                <input id="newPassword" name="newPassword" type="password"
+                                       class="form-control{#if passwordErrors.containsKey('newPassword')} is-invalid{/if}"
+                                       required minlength="8" autocomplete="new-password"
+                                       placeholder="Min 8 characters">
                                 <button class="btn btn-outline-secondary" type="button"
-                                        onclick="toggleVis('newPassword', this)">Show</button>
+                                        onclick="toggleVis('newPassword', this)">Show
+                                </button>
                             </div>
                             <div class="form-text">Use at least 8 characters.</div>
+                            {#if passwordErrors.containsKey('newPassword')}
+                            <div class="invalid-feedback d-block">
+                                {passwordErrors.get('newPassword')}
+                            </div>
+                            {/if}
                         </div>
 
+                        <!-- Confirm -->
                         <div class="mb-3">
                             <label for="confirmPassword" class="form-label">Confirm new password</label>
                             <div class="input-group">
-                                <input id="confirmPassword" name="confirmPassword" type="password" class="form-control"
-                                       required autocomplete="new-password" placeholder="Repeat new password"
-                                       value="{passwordForm.confirmPassword??}">
+                                <input id="confirmPassword" name="confirmPassword" type="password"
+                                       class="form-control{#if passwordErrors.containsKey('confirmPassword')} is-invalid{/if}"
+                                       required autocomplete="new-password"
+                                       placeholder="Repeat new password">
                                 <button class="btn btn-outline-secondary" type="button"
-                                        onclick="toggleVis('confirmPassword', this)">Show</button>
+                                        onclick="toggleVis('confirmPassword', this)">Show
+                                </button>
                             </div>
                             <p id="pwMatchHelp" class="small mt-1"></p>
+                            {#if passwordErrors.containsKey('confirmPassword')}
+                            <div class="invalid-feedback d-block">
+                                {passwordErrors.get('confirmPassword')}
+                            </div>
+                            {/if}
                         </div>
 
                         <button type="submit" class="btn btn-primary">Update password</button>
@@ -98,10 +122,13 @@
       const np = document.getElementById('newPassword');
       const cp = document.getElementById('confirmPassword');
       const hint = document.getElementById('pwMatchHelp');
-      const collapse = document.getElementById('changePassword');
 
       const updateHint = () => {
-        if (!np.value && !cp.value) { hint.textContent = ''; hint.className = 'small mt-1'; return; }
+        if (!np.value && !cp.value) {
+          hint.textContent = '';
+          hint.className = 'small mt-1';
+          return;
+        }
         if (np.value === cp.value) {
           hint.textContent = 'Passwords match ✔';
           hint.className = 'small mt-1 text-success';
@@ -134,8 +161,6 @@
         if (!form.checkValidity()) {
           e.preventDefault();
           e.stopPropagation();
-          // Keep the panel open to show errors
-          collapse.classList.add('show');
         }
       });
     });

@@ -4,9 +4,16 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-semibold text-primary mb-0">My Tasks</h2>
-    <a class="btn btn-primary shadow-sm" href="/tasks/new">
-        <i class="bi bi-plus-circle me-1"></i> Add New Task
-    </a>
+    <div class="btn-group" role="group">
+        <!-- Import Button -->
+        <a class="btn btn-outline-secondary shadow-sm me-2" href="/tasks/import">
+            <i class="bi bi-file-earmark-arrow-up me-1"></i> Import from file
+        </a>
+        <!-- Add New Task Button -->
+        <a class="btn btn-primary shadow-sm" href="/tasks/new">
+            <i class="bi bi-plus-circle me-1"></i> Add New Task
+        </a>
+    </div>
 </div>
 
 <div class="card shadow-sm">
@@ -42,7 +49,7 @@
                             <i class="bi bi-pencil-square"></i> Edit
                         </a>
 
-                        <!-- Hidden delete form + modal trigger (optional: reuse your modal pattern) -->
+                        <!-- Hidden delete form -->
                         <form id="deleteForm-{t.id}" action="/tasks/{t.id}/delete" method="post" class="d-inline">
                             <button type="submit" class="btn btn-sm btn-danger btn-action">
                                 <i class="bi bi-trash3"></i> Delete

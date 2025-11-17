@@ -1,0 +1,55 @@
+{#include fragment/base}
+{#title}Import Tasks{/title}
+{#content}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="card-title mb-4">Import Tasks from CSV</h3>
+
+                {#if result}
+                {#if result.importedCount > 0}
+                <div class="alert alert-success">
+                    Successfully imported {result.importedCount} task(s).
+                </div>
+                {/if}
+                {#if result.errors && result.errors.size() > 0}
+                <div class="alert alert-warning">
+                    <strong>Some rows failed:</strong>
+                    <ul class="mb-0">
+                        {#for err in result.errors}
+                        <li>{err}</li>
+                        {/for}
+                    </ul>
+                </div>
+                {/if}
+                {/if}
+
+                <form action="/tasks/import" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">CSV File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
+                        <div class="form-text">
+                            Required columns: <code>title</code>, optional: <code>description</code>, <code>dueDate</code> (YYYY-MM-DD), <code>status</code>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Import</button>
+                    <a href="/tasks/view" class="btn btn-secondary">Cancel</a>
+                </form>
+
+                <details class="mt-4">
+                    <summary>Sample CSV format</summary>
+                    <pre class="bg-light p-3 rounded">
+title,description,dueDate,status
+Buy milk,From the store,2025-12-01,PENDING
+Finish report,,2025-11-20,IN_PROGRESS
+                    </pre>
+                </details>
+            </div>
+        </div>
+    </div>
+</div>
+
+{/content}
+{/include}

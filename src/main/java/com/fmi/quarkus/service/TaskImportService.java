@@ -1,6 +1,7 @@
 package com.fmi.quarkus.service;
 
 import com.fmi.quarkus.dto.ImportResult;
+import com.fmi.quarkus.model.Status;
 import com.fmi.quarkus.model.Task;
 import com.fmi.quarkus.model.User;
 import io.quarkus.logging.Log;
@@ -132,9 +133,9 @@ public class TaskImportService {
             }
         }
 
-        Task.Status status;
+        Status status;
         try {
-            status = Task.Status.valueOf(statusStr.toUpperCase());
+            status = Status.valueOf(statusStr.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid status: " + statusStr + " (use PENDING, IN_PROGRESS, DONE)");
         }

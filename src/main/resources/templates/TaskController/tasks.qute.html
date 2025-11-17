@@ -4,70 +4,86 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-semibold text-primary mb-0">My Tasks</h2>
-    <div class="btn-group" role="group">
-        <!-- Import Button -->
-        <a class="btn btn-outline-secondary shadow-sm me-2" href="/tasks/import">
-            <i class="bi bi-file-earmark-arrow-up me-1"></i> Import from file
-        </a>
-        <!-- Add New Task Button -->
-        <a class="btn btn-primary shadow-sm" href="/tasks/new">
-            <i class="bi bi-plus-circle me-1"></i> Add New Task
-        </a>
-    </div>
+    <a class="btn btn-primary shadow-sm" href="/tasks/new">
+        <i class="bi bi-plus-circle me-1"></i> Add New Task
+    </a>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover bg-white">
-                <thead class="table-light">
-                <tr>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Due Date</th>
-                    <th>Status</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                {#for t in tasks}
-                <tr>
-                    <td>{t.title}</td>
-                    <td>{t.description}</td>
-                    <td>{t.dueDate}</td>
-                    <td>
-                        {#if t.status == 'DONE'}
-                        <span class="badge bg-success task-badge">DONE</span>
-                        {:elseif t.status == 'PENDING'}
-                        <span class="badge bg-primary task-badge">PENDING</span>
-                        {:else}
-                        <span class="badge bg-secondary task-badge">{t.status}</span>
-                        {/if}
-                    </td>
-                    <td class="text-end">
-                        <a href="/tasks/edit/{t.id}" class="btn btn-sm btn-outline-warning btn-action">
-                            <i class="bi bi-pencil-square"></i> Edit
-                        </a>
+<div class="table-responsive">
+    <table class="table table-hover bg-white shadow-sm">
+        <thead class="table-light">
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Due Date</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {#for task in tasks}
+        <tr>
+            <td>{task.title}</td>
 
-                        <!-- Hidden delete form -->
-                        <form id="deleteForm-{t.id}" action="/tasks/{t.id}/delete" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-danger btn-action">
-                                <i class="bi bi-trash3"></i> Delete
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {/for}
-
-                {#if tasks.isEmpty}
-                <tr>
-                    <td colspan="5" class="text-center text-muted py-4">No tasks yet.</td>
-                </tr>
+            <!-- Description: show blank if null -->
+            <td>
+                {#if task.description != null}
+                {task.description}
+                {#else}
+                <!-- empty -->
                 {/if}
-                </tbody>
-            </table>
-        </div>
-    </div>
+            </td>
+
+            <!-- Due date: show blank if null -->
+            <td>
+                {#if task.dueDate != null}
+                {task.dueDate}
+                {#else}
+                <!-- empty -->
+                {/if}
+            </td>
+
+            <!-- Status badge -->
+            <td>
+                {#if task.status != null}
+                {#if task.status.name == 'DONE'}
+                <span class="badge bg-success task-badge">{task.status.name}</span>
+                {#else if task.status.name == 'PENDING'}
+                <span class="badge bg-primary task-badge">{task.status.name}</span>
+                {#else if task.status.name == 'IN_PROGRESS'}
+                <span class="badge bg-warning text-dark task-badge">{task.status.name}</span>
+                {#else}
+                <span class="badge bg-secondary task-badge">{task.status.name}</span>
+                {/if}
+                {#else}
+                <span class="badge bg-secondary task-badge">UNKNOWN</span>
+                {/if}
+            </td>
+
+            <td class="text-end">
+                <a href="/tasks/edit/{task.id}" class="btn btn-sm btn-outline-warning btn-action">
+                    <i class="bi bi-pencil-square"></i> Edit
+                </a>
+                <form action="/tasks/{task.id}/delete" method="post" class="d-inline"
+                      onsubmit="return confirm('Delete this task?');">
+                    <button type="submit" class="btn btn-sm btn-danger btn-action">
+                        <i class="bi bi-trash3"></i> Delete
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {/for}
+
+        {#if tasks.isEmpty}
+        <tr>
+            <td colspan="5" class="text-center text-muted py-4">
+                You don't have any tasks yet. <a href="/tasks/new">Create your first task</a>.
+            </td>
+        </tr>
+        {/if}
+        </tbody>
+
+    </table>
 </div>
 
 {/content}

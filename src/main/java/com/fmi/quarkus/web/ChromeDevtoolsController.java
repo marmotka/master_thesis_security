@@ -7,15 +7,21 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-@Path("/.well-known/appspecific")
 @PermitAll
 @ApplicationScoped
 public class ChromeDevtoolsController {
 
     @GET
-    @Path("com.chrome.devtools.json")
+    @Path("/.well-known/appspecific/*")
     @Produces(MediaType.APPLICATION_JSON)
     public String silenceChrome() {
+        return "{}";
+    }
+
+    @GET
+    @Path("favicon.ico")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String silenceChrome2() {
         return "{}";
     }
 }

@@ -1,11 +1,10 @@
 package com.fmi.quarkus.model;
 
-import com.fmi.quarkus.model.Role;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.security.jpa.Password;
 import io.quarkus.security.jpa.Roles;
-import io.quarkus.security.jpa.Username;
 import io.quarkus.security.jpa.UserDefinition;
+import io.quarkus.security.jpa.Username;
 import jakarta.persistence.*;
 
 @Entity
@@ -32,8 +31,16 @@ public class User extends PanacheEntity {
         return this.role.name();  // e.g., returns "USER" or "ADMIN"
     }
 
-    public static User findByUsername(String u) { return find("username", u).firstResult(); }
-    public static boolean existsByUsername(String u) { return find("username", u).firstResult() != null; }
-    public static boolean existsByEmail(String e) { return find("email", e).firstResult() != null; }
+    public static User findByUsername(String u) {
+        return find("username", u).firstResult();
+    }
+
+    public static boolean existsByUsername(String u) {
+        return find("username", u).firstResult() != null;
+    }
+
+    public static boolean existsByEmail(String e) {
+        return find("email", e).firstResult() != null;
+    }
 }
 

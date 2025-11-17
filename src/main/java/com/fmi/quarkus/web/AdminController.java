@@ -1,6 +1,6 @@
 package com.fmi.quarkus.web;
 
-import com.fmi.quarkus.model.User;
+import com.fmi.quarkus.dto.UserDto;
 import com.fmi.quarkus.service.UserService;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
@@ -8,18 +8,18 @@ import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.common.annotation.Blocking;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.SecurityContext;
 
-import java.security.Principal;
+import java.net.URI;
 import java.util.List;
 
-@Path("/admin")
+@Path("/admin/users")
 @Blocking
 @RolesAllowed("ADMIN")
+@Produces(MediaType.TEXT_HTML)
 public class AdminController {
 
     @Inject
@@ -30,32 +30,52 @@ public class AdminController {
 
     @CheckedTemplate
     public static class Tpl {
-        public static native TemplateInstance users(List<User> users, String currentUsername, String successMessage, String errorMessage, SecurityIdentity identity);
+        public static native TemplateInstance users(List<UserDto> users,
+                                                    SecurityIdentity identity,
+                                                    String successMessage,
+                                                    String errorMessage);
+    }
+
+    private String currentAdmin() {
+        return identity.getPrincipal().getName();
     }
 
     @GET
-    @Path("users")
-    @Produces(MediaType.TEXT_HTML)
-    @RolesAllowed("admin")
-    public TemplateInstance users() {  // No params!
-        List<User> all = userService.findAll();
-        String username = identity.getPrincipal().getName();  // Direct from injected identity
+    public TemplateInstance list(@QueryParam("notice") @DefaultValue("") String notice) {
+        List<UserDto> users = userService.findAllUsersForAdmin();
 
-        return Tpl.users(all, username, null, null, identity);
+        String success = "";
+        String error   = "";
+
+        switch (notice) {
+            case "deleted"    -> success = "User deleted successfully.";
+            case "selfDelete" -> error   = "You cannot delete your own account.";
+            case "notfound"   -> error   = "User not found.";
+            case "lastAdmin"  -> error   = "Cannot delete the last admin user.";
+        }
+
+        return Tpl.users(users, identity, success, error);
     }
 
     @POST
-    @Path("/users/{id}/delete")
-    public Response delete(@PathParam("id") Long id, Principal principal) {
-        var me = userService.findByUsername(principal.getName()).orElseThrow();
-        var target = userService.findById(id).orElse(null);
-        if (target == null) {
-            return Response.seeOther(java.net.URI.create("/admin/users?errorMessage=User%20not%20found")).build();
+    @Path("{id}/delete")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response delete(@PathParam("id") Long id) {
+        String admin = currentAdmin();
+        try {
+            userService.deleteUserAsAdmin(id, admin);
+            return Response.seeOther(URI.create("/admin/users?notice=deleted")).build();
+
+        } catch (IllegalArgumentException ex) {
+            // Self delete attempt
+            return Response.seeOther(URI.create("/admin/users?notice=selfDelete")).build();
+
+        } catch (IllegalStateException ex) {
+            // Last admin case
+            return Response.seeOther(URI.create("/admin/users?notice=lastAdmin")).build();
+
+        } catch (EntityNotFoundException ex) {
+            return Response.seeOther(URI.create("/admin/users?notice=notfound")).build();
         }
-        if (target.id.equals(me.id)) {
-            return Response.seeOther(java.net.URI.create("/admin/users?errorMessage=You%20cannot%20delete%20your%20own%20account")).build();
-        }
-        userService.deleteById(id);
-        return Response.seeOther(java.net.URI.create("/admin/users?successMessage=User%20deleted")).build();
     }
 }

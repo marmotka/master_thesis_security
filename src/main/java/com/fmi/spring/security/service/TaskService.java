@@ -20,7 +20,16 @@ public class TaskService {
     public List<Task> getTasksForUser(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return taskRepository.findByOwner(user);
+        return taskRepository.findByOwner(user)
+            .stream()
+                .map(Task.class::cast)
+                .sorted(Comparator
+                        .comparingInt((Task t) -> getStatusPriority(t.getStatus()))
+                        .thenComparing(Task::getDueDate,
+                                Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(t -> t.getTitle() == null ? "" : t.getTitle(),
+                                String.CASE_INSENSITIVE_ORDER))
+                .toList();
     }
 
     public Task createTask(Task task, String username) {
@@ -55,6 +64,18 @@ public class TaskService {
         }
 
         taskRepository.delete(task);
+    }
+
+        private int getStatusPriority(Status status) {
+        if (status == null) {
+            return 4;
+        }
+        return switch (status.name()) {
+            case "IN_PROGRESS"   -> 1;
+            case "PENDING"       -> 2;
+            case "DONE"          -> 3;
+            default              -> 4;
+        };
     }
 }
 

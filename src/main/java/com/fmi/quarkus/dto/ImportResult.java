@@ -28,13 +28,4 @@ public class ImportResult {
         return !errors.isEmpty();
     }
 
-    public String getSummary() {
-        if (importedCount == 0 && errors.isEmpty()) {
-            return "No tasks were imported.";
-        }
-        return String.format("Imported %,d task%s%s",
-                importedCount,
-                importedCount == 1 ? "" : "s",
-                hasErrors() ? " (with some errors)" : "");
-    }
 }

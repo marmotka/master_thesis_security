@@ -2,6 +2,7 @@ package com.fmi.quarkus.web;
 
 import com.fmi.quarkus.dto.UserDto;
 import com.fmi.quarkus.service.UserService;
+import com.fmi.quarkus.util.Notice;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -13,7 +14,6 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import java.net.URI;
 import java.util.List;
 
 @Path("/admin/users")
@@ -45,13 +45,19 @@ public class AdminController {
         List<UserDto> users = userService.findAllUsersForAdmin();
 
         String success = "";
-        String error   = "";
+        String error = "";
 
-        switch (notice) {
-            case "deleted"    -> success = "User deleted successfully.";
-            case "selfDelete" -> error   = "You cannot delete your own account.";
-            case "notfound"   -> error   = "User not found.";
-            case "lastAdmin"  -> error   = "Cannot delete the last admin user.";
+        if (!notice.isBlank()) {
+            try {
+                Notice n = Notice.valueOf(notice.toUpperCase());
+                if ("success".equals(n.type())) {
+                    success = n.message();
+                } else {
+                    error = n.message();
+                }
+            } catch (IllegalArgumentException ex) {
+                // unknown notice → ignore silently
+            }
         }
 
         return Tpl.users(users, identity, success, error);
@@ -62,20 +68,20 @@ public class AdminController {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response delete(@PathParam("id") Long id) {
         String admin = currentAdmin();
+
         try {
             userService.deleteUserAsAdmin(id, admin);
-            return Response.seeOther(URI.create("/admin/users?notice=deleted")).build();
+            return Response.seeOther(Notice.DELETED.redirectTo("/admin/users")).build();
 
         } catch (IllegalArgumentException ex) {
-            // Self delete attempt
-            return Response.seeOther(URI.create("/admin/users?notice=selfDelete")).build();
+            return Response.seeOther(Notice.SELF_DELETE.redirectTo("/admin/users")).build();
 
         } catch (IllegalStateException ex) {
-            // Last admin case
-            return Response.seeOther(URI.create("/admin/users?notice=lastAdmin")).build();
+            return Response.seeOther(Notice.LAST_ADMIN.redirectTo("/admin/users")).build();
 
         } catch (EntityNotFoundException ex) {
-            return Response.seeOther(URI.create("/admin/users?notice=notfound")).build();
+            return Response.seeOther(Notice.NOT_FOUND.redirectTo("/admin/users")).build();
         }
     }
+
 }

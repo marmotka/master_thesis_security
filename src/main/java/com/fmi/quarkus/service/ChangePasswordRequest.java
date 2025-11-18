@@ -7,7 +7,8 @@ public class ChangePasswordRequest {
     public String newPassword;
     public String confirmPassword;
 
-    public ChangePasswordRequest() {}
+    public ChangePasswordRequest() {
+    }
 
     public ChangePasswordRequest(String currentPassword, String newPassword, String confirmPassword) {
         this.currentPassword = currentPassword;

@@ -7,7 +7,8 @@ public class UserDto {
     public String email;
     public String role;   // single role for display (e.g. "ADMIN" or "USER")
 
-    public UserDto() {}
+    public UserDto() {
+    }
 
     public UserDto(Long id, String username, String email, String role) {
         this.id = id;

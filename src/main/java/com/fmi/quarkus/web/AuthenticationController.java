@@ -1,6 +1,6 @@
 package com.fmi.quarkus.web;
 
-import com.fmi.quarkus.exception.DuplicateEmailException;
+import com.fmi.quarkus.exception.DuplicateFieldException;
 import com.fmi.quarkus.service.UserService;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
@@ -33,7 +33,6 @@ public class AuthenticationController {
     @Inject
     UserService userService;
 
-    // Qute-checked templates (compile-time safe)
     @CheckedTemplate
     public static class Tpl {
         public static native TemplateInstance login(String message, String error, SecurityIdentity identity);
@@ -43,7 +42,7 @@ public class AuthenticationController {
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    @Authenticated  // Require login
+    @Authenticated
     public Response home() {
         return Response.seeOther(UriBuilder.fromPath("/tasks/view").build())
                 .build();
@@ -96,7 +95,7 @@ public class AuthenticationController {
 
         try {
             userService.register(request);
-        } catch (DuplicateEmailException ex) {
+        } catch (DuplicateFieldException ex) {
             errors.put("email", ex.getMessage());
             return Tpl.register(request, errors, null, identity);
         }
@@ -126,7 +125,6 @@ public class AuthenticationController {
     }
 
 
-    // ----- Simple form DTO bound from x-www-form-urlencoded -----
     public static class RegisterRequest {
         @FormParam("username")
         public String username;

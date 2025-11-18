@@ -10,10 +10,10 @@ import io.smallrye.common.annotation.Blocking;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.net.URI;
-import java.util.HashMap;
 import java.util.Map;
 
 @Path("/profile")
@@ -22,8 +22,11 @@ import java.util.Map;
 public class ProfileController {
 
 
-    @Inject SecurityIdentity identity;
-    @Inject UserService userService;
+    public static final String BLANK_STRING = "";
+    @Inject
+    SecurityIdentity identity;
+    @Inject
+    UserService userService;
 
     @CheckedTemplate
     public static class Tpl {
@@ -39,14 +42,13 @@ public class ProfileController {
 
     @GET
     @Path("/view")
-    public TemplateInstance view(@QueryParam("notice") @DefaultValue("") String notice) {
+    public TemplateInstance view(@QueryParam("notice") @DefaultValue(BLANK_STRING) String notice) {
         String username = identity.getPrincipal().getName();
         var user = userService.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         boolean openSection = false;
-        String successMessage = "";
-        String errorMessage   = "";
+        String successMessage = BLANK_STRING;
 
         if ("pwChanged".equals(notice)) {
             successMessage = "Password updated successfully.";
@@ -54,14 +56,17 @@ public class ProfileController {
 
         return Tpl.profile(user.username, user.email, openSection, Map.of(), identity)
                 .data("successMessage", successMessage)
-                .data("errorMessage", errorMessage);
+                .data("errorMessage", BLANK_STRING);
     }
 
     // Change password
     public static class ChangePasswordForm {
-        @FormParam("currentPassword") public String currentPassword;
-        @FormParam("newPassword")     public String newPassword;
-        @FormParam("confirmPassword") public String confirmPassword;
+        @FormParam("currentPassword")
+        public String currentPassword;
+        @FormParam("newPassword")
+        public String newPassword;
+        @FormParam("confirmPassword")
+        public String confirmPassword;
     }
 
     @POST
@@ -89,7 +94,7 @@ public class ProfileController {
             return Tpl.profile(
                     user.username,
                     user.email,
-                    true,                         // open password collapse
+                    true,
                     ex.getFieldErrors(),
                     identity
             );

@@ -6,8 +6,10 @@ import com.fmi.quarkus.exception.FileValidationException;
 import com.fmi.quarkus.model.Status;
 import com.fmi.quarkus.model.Task;
 import com.fmi.quarkus.model.User;
+import com.fmi.quarkus.util.TaskFields;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import org.jboss.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import java.io.BufferedReader;
@@ -23,80 +25,100 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.fmi.quarkus.util.TaskFields.*;
+
 @ApplicationScoped
 public class TaskImportService {
 
+    private static final Logger log = Logger.getLogger(TaskImportService.class);
 
-    public static final String TITLE = "title";
-    public static final String DESCRIPTION = "description";
-    public static final String DUEDATE = "duedate";
-    public static final String STATUS = "status";
-    private static final Set<String> ALLOWED_HEADERS = Set.of(TITLE, DESCRIPTION, DUEDATE, STATUS);
-    private static final Set<String> REQUIRED_HEADERS = Set.of(TITLE);
     private static final byte[] CSV_BOM_UTF8 = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
     @Transactional
-    public ImportResult importFromCsv(InputStream csvStream, String originalFilename, String username) throws IOException {
+    public ImportResult importFromCsv(InputStream csvStream, String originalFilename, String username) throws Exception {
 
         User owner = User.findByUsername(username);
         if (owner == null) {
             throw new IllegalArgumentException("User not found");
         }
 
-        validateFileType(csvStream, originalFilename);
+        // Validate filename
+        if (originalFilename == null || !originalFilename.toLowerCase().endsWith(".csv")) {
+            throw new FileValidationException("Only .csv files are allowed.");
+        }
 
-        ValidationHeadersResult validationResult = getValidationHeadersResult(csvStream);
+        // Validate content + get headers and a ready-to-use BufferedReader
+        try (ValidationHeadersResult validation = validateHeadersAndGetReader(csvStream)) {
 
-        // All validations passed → do the real import
-        ImportResult result = new ImportResult();
-        result.setFilename(originalFilename);
-        result.setImportedCount(0);
+            ImportResult result = new ImportResult();
+            result.setFilename(originalFilename);
 
-        createTasksFromFile(validationResult, owner, result);
+            createTasksFromFile(validation, owner, result);
 
-        return result;
+            return result;
+        }
     }
 
-    private void createTasksFromFile(ValidationHeadersResult validationResult,
+    private void createTasksFromFile(ValidationHeadersResult validation,
                                      User owner,
                                      ImportResult result) throws IOException {
 
-        int lineNumber = 2; // assuming line 1 was the header
+        int lineNumber = 2; // line 1 = header
 
-        try (BufferedReader reader = validationResult.reader()) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-
-                List<String> values = parseCsvLine(line);
-
-                // Pad missing columns to match header count
-                while (values.size() < validationResult.headers().size()) {
-                    values.add("");
-                }
-
-                try {
-                    createTaskFromRow(validationResult.headers(), values, owner);
-                    result.setImportedCount(result.getImportedCount() + 1);
-                } catch (Exception e) {
-                    result.getErrors().add("Line " + lineNumber + ": " + e.getMessage());
-                }
-
-                lineNumber++;
+        String line;
+        while ((line = validation.reader().readLine()) != null) {
+            if (line.trim().isEmpty()) {
+                continue;
             }
+
+            List<String> values = parseCsvLine(line);
+
+            // Pad missing columns
+            while (values.size() < validation.headers().size()) {
+                values.add("");
+            }
+
+            try {
+                createTaskFromRow(validation.headers(), values, owner);
+                result.setImportedCount(result.getImportedCount() + 1);
+            } catch (Exception e) {
+                result.getErrors().add("Line " + lineNumber + ": " + e.getMessage());
+            }
+
+            lineNumber++;
         }
-        // No need to close manually — try-with-resources does it automatically
     }
 
-    private ValidationHeadersResult getValidationHeadersResult(InputStream csvStream) throws IOException {
-        // Read first line → must be header and contain required columns
+    private ValidationHeadersResult validateHeadersAndGetReader(InputStream csvStream) throws IOException {
+        try {
+            // Magic bytes + BOM handling (same as before)
+            csvStream.mark(1024);
+            byte[] firstBytes = csvStream.readNBytes(10);
+            csvStream.reset();
+
+            boolean hasBom = firstBytes.length >= 3 &&
+                    firstBytes[0] == (byte) 0xEF &&
+                    firstBytes[1] == (byte) 0xBB &&
+                    firstBytes[2] == (byte) 0xBF;
+
+            // Basic binary file detection
+            for (int i = hasBom ? 3 : 0; i < firstBytes.length; i++) {
+                int b = firstBytes[i] & 0xFF;
+                if (b == 0 || (b > 0 && b < 9) || (b > 13 && b < 32)) {
+                    throw new FileValidationException("File appears to be binary or corrupted.");
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Attempt to import invalid file ", e);
+            throw new FileValidationException("Wrong format. Only CSV file is allowed.");
+        }
+
         BufferedReader reader = new BufferedReader(
-                new InputStreamReader(csvStream, StandardCharsets.UTF_8)); // UTF-8 always
+                new InputStreamReader(csvStream, StandardCharsets.UTF_8));
 
         String headerLine = reader.readLine();
         if (headerLine == null || headerLine.trim().isEmpty()) {
+            reader.close();
             throw new FileValidationException("CSV file is empty or has no header row.");
         }
 
@@ -106,49 +128,27 @@ public class TaskImportService {
                 .map(String::toLowerCase)
                 .collect(Collectors.toSet());
 
-        if (!headerSet.containsAll(REQUIRED_HEADERS.stream().map(String::toLowerCase).collect(Collectors.toSet()))) {
-            throw new FileValidationException("Missing required column: 'title'. Found: " + String.join(", ", headers));
+        Set<String> missing = new HashSet<>(TaskFields.REQUIRED);
+        missing.removeAll(headerSet);
+
+        if (!missing.isEmpty()) {
+            throw new FileValidationException(
+                    "Missing required column(s): " + String.join(", ", missing)
+            );
         }
 
-        Set<String> unknown = new HashSet<>(headerSet);
-        unknown.removeAll(ALLOWED_HEADERS.stream().map(String::toLowerCase).collect(Collectors.toSet()));
+        // reject unknown columns
+        Set<String> unknown = headerSet.stream()
+                .filter(h -> !ALLOWED.contains(h))
+                .collect(Collectors.toSet());
         if (!unknown.isEmpty()) {
+            reader.close();
             throw new FileValidationException("Unknown column(s): " + unknown);
         }
+
         return new ValidationHeadersResult(reader, headers);
     }
 
-
-    private static void validateFileType(InputStream csvStream, String originalFilename) throws IOException {
-        // Validate filename extension
-        if (originalFilename == null || !originalFilename.toLowerCase().endsWith(".csv")) {
-            throw new FileValidationException("Only .csv files are allowed. Received: " + originalFilename);
-        }
-
-        try {
-            // Check magic bytes (BOM + first chars must be text)
-            csvStream.mark(1024);
-            byte[] firstBytes = csvStream.readNBytes(10);
-            csvStream.reset();
-
-            // Check for UTF-8 BOM
-            boolean hasBom = firstBytes.length >= 3 &&
-                    firstBytes[0] == CSV_BOM_UTF8[0] &&
-                    firstBytes[1] == CSV_BOM_UTF8[1] &&
-                    firstBytes[2] == CSV_BOM_UTF8[2];
-            // Basic text check: must contain printable ASCII or UTF-8 chars
-            for (int i = hasBom ? 3 : 0; i < firstBytes.length; i++) {
-                int b = firstBytes[i] & 0xFF;
-                if (b < 9 || b > 13 && b < 32) {
-                    // null byte or control chars (except \t \n \r)
-                    throw new FileValidationException("File appears to be binary or corrupted (contains invalid control characters).");
-                }
-            }
-        } catch (Exception e) {
-            throw new FileValidationException("Wrong format. Only .csv files are allowed.");
-        }
-
-    }
 
     private void createTaskFromRow(List<String> headers, List<String> values, User owner) {
         Task task = new Task();
@@ -164,12 +164,12 @@ public class TaskImportService {
                     task.title = value;
                 }
                 case DESCRIPTION -> task.description = value.isEmpty() ? null : value;
-                case DUEDATE -> {
+                case DUE_DATE -> {
                     if (!value.isBlank()) {
                         try {
                             task.dueDate = LocalDate.parse(value); // expects YYYY-MM-DD
                         } catch (DateTimeParseException e) {
-                            throw new IllegalArgumentException("Invalid dueDate format: " + value + " (use YYYY-MM-DD)");
+                            throw new IllegalArgumentException("Invalid DUE_DATE format: " + value + " (use YYYY-MM-DD)");
                         }
                     }
                 }

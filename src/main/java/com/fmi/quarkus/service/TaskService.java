@@ -6,6 +6,7 @@ import com.fmi.quarkus.exception.TaskValidationException;
 import com.fmi.quarkus.model.Status;
 import com.fmi.quarkus.model.Task;
 import com.fmi.quarkus.model.User;
+import com.fmi.quarkus.util.TaskFields;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
@@ -26,7 +27,7 @@ public class TaskService {
                 .stream()
                 .map(Task.class::cast)
                 .sorted(Comparator
-                        .comparingInt((Task t) -> getStatusPriority(t.getStatus()))
+                        .comparingInt((Task task) -> Status.priorityOf(task.getStatus()))
                         .thenComparing(Task::getDueDate,
                                 Comparator.nullsLast(Comparator.naturalOrder()))
                         .thenComparing(t -> t.getTitle() == null ? "" : t.getTitle(),
@@ -93,14 +94,12 @@ public class TaskService {
         log.infof("Task %d deleted by user %s", t.id, username);
     }
 
-    // ---------- Helpers ----------
-
 
     private static void updateFields(TaskForm form, Task t, User owner) {
         t.title = form.title.trim();
         t.description = form.description != null ? form.description.trim() : null;
         t.dueDate = (form.dueDate == null || form.dueDate.isBlank()) ? null : LocalDate.parse(form.dueDate);
-        t.status =  Status.valueOf(form.status);
+        t.status = Status.valueOf(form.status);
         t.owner = owner;
     }
 
@@ -117,41 +116,30 @@ public class TaskService {
         Map<String, String> errors = new HashMap<>();
 
         if (form.title == null || form.title.isBlank()) {
-            errors.put("title", "Title is required.");
+            errors.put(TaskFields.TITLE, "Title is required.");
         } else if (form.title.length() > 255) {
-            errors.put("title", "Title is too long (max 255 characters).");
+            errors.put(TaskFields.TITLE, "Title is too long (max 255 characters).");
         }
 
         if (form.dueDate != null && !form.dueDate.isBlank()) {
             try {
                 LocalDate.parse(form.dueDate);
             } catch (DateTimeParseException ex) {
-                errors.put("dueDate", "Invalid date format.");
+                errors.put(TaskFields.DUE_DATE, "Invalid date format.");
             }
         }
 
         if (form.status == null || form.status.isBlank()) {
-            errors.put("status", "Status is required.");
+            errors.put(TaskFields.STATUS, "Status is required.");
         } else {
             try {
                 Status.valueOf(form.status);
             } catch (IllegalArgumentException ex) {
-                errors.put("status", "Invalid status.");
+                errors.put(TaskFields.STATUS, "Invalid status.");
             }
         }
 
         return errors;
     }
 
-    private int getStatusPriority(Status status) {
-        if (status == null) {
-            return 4;
-        }
-        return switch (status.name()) {
-            case "IN_PROGRESS"   -> 1;
-            case "PENDING"       -> 2;
-            case "DONE"          -> 3;
-            default              -> 4;
-        };
-    }
 }

@@ -1,8 +1,11 @@
 package com.fmi.quarkus.exception;
 
+import lombok.Getter;
+
 import java.util.Collections;
 import java.util.Map;
 
+@Getter
 public class PasswordChangeException extends RuntimeException {
 
     private final Map<String, String> fieldErrors;
@@ -12,7 +15,4 @@ public class PasswordChangeException extends RuntimeException {
         this.fieldErrors = fieldErrors != null ? fieldErrors : Collections.emptyMap();
     }
 
-    public Map<String, String> getFieldErrors() {
-        return fieldErrors;
-    }
 }

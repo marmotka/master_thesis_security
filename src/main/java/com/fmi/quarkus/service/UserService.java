@@ -2,7 +2,7 @@ package com.fmi.quarkus.service;
 
 
 import com.fmi.quarkus.dto.UserDto;
-import com.fmi.quarkus.exception.DuplicateEmailException;
+import com.fmi.quarkus.exception.DuplicateFieldException;
 import com.fmi.quarkus.exception.PasswordChangeException;
 import com.fmi.quarkus.mapper.UserMapper;
 import com.fmi.quarkus.model.Role;
@@ -25,11 +25,17 @@ public class UserService {
 
     private static final Logger log = Logger.getLogger(UserService.class);
 
+    public static final int PASSWORD_LENGTH = 8;
+    public static final String CURRENT_PASSWORD = "currentPassword";
+    public static final String NEW_PASSWORD = "newPassword";
+    public static final String CONFIRM_PASSWORD = "confirmPassword";
+    public static final String USERNAME = "username";
+
     @Inject
     UserMapper userMapper;
 
     public Optional<User> findByUsername(String username) {
-        return User.find("username", username).firstResultOptional();
+        return User.find(USERNAME, username).firstResultOptional();
     }
 
     public List<UserDto> findAllUsersForAdmin() {
@@ -42,15 +48,15 @@ public class UserService {
     }
 
     @Transactional
-    public User register(AuthenticationController.RegisterRequest request) {
-        if (User.existsByEmail(request.email)) throw new DuplicateEmailException("Email is already in use.");
+    public void register(AuthenticationController.RegisterRequest request) {
+        if (User.existsByEmail(request.email)) throw new DuplicateFieldException("Email is already in use.");
+        if (User.existsByUsername(request.username)) throw new DuplicateFieldException("Username is already in use.");
         User u = new User();
         u.username = request.username;
         u.email = request.email;
         u.password = BcryptUtil.bcryptHash(request.password);
         u.role = Role.USER;
         u.persist();
-        return u;
     }
 
     @Transactional
@@ -59,24 +65,24 @@ public class UserService {
 
         // Basic validation (no passwords in logs or exceptions)
         if (req.currentPassword == null || req.currentPassword.isBlank()) {
-            errors.put("currentPassword", "Please enter your current password.");
+            errors.put(CURRENT_PASSWORD, "Please enter your current password.");
         }
         if (req.newPassword == null || req.newPassword.isBlank()) {
-            errors.put("newPassword", "Please enter a new password.");
-        } else if (req.newPassword.length() < 8) {
-            errors.put("newPassword", "Password must be at least 8 characters.");
+            errors.put(NEW_PASSWORD, "Please enter a new password.");
+        } else if (req.newPassword.length() < PASSWORD_LENGTH) {
+            errors.put(NEW_PASSWORD, "Password must be at least " + PASSWORD_LENGTH + " characters.");
         }
         if (req.confirmPassword == null || req.confirmPassword.isBlank()) {
-            errors.put("confirmPassword", "Please confirm your new password.");
-        } else if (!req.newPassword.equals(req.confirmPassword)) {
-            errors.put("confirmPassword", "Passwords do not match.");
+            errors.put(CONFIRM_PASSWORD, "Please confirm your new password.");
+        } else if (!req.confirmPassword.equals(req.newPassword)) {
+            errors.put(CONFIRM_PASSWORD, "Passwords do not match.");
         }
 
         if (!errors.isEmpty()) {
             throw new PasswordChangeException("Validation failed for password change", errors);
         }
 
-        User u = User.find("username", username).firstResult();
+        User u = User.find(USERNAME, username).firstResult();
         if (u == null) {
             // This should never happen for an authenticated user, but keep it defensive.
             log.warnf("Password change requested for non-existing user: %s", username);
@@ -85,7 +91,7 @@ public class UserService {
 
         // Check current password (using hash, no decryption)
         if (!BcryptUtil.matches(req.currentPassword, u.password)) {
-            errors.put("currentPassword", "Current password is incorrect.");
+            errors.put(CURRENT_PASSWORD, "Current password is incorrect.");
             throw new PasswordChangeException("Current password does not match", errors);
         }
 

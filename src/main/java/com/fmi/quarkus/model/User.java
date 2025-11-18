@@ -9,9 +9,11 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "app_user")
-@UserDefinition // enables Quarkus Security JPA for form login
+@UserDefinition
 public class User extends PanacheEntity {
 
+    public static final String USERNAME = "username";
+    public static final String EMAIL = "email";
     @Username
     @Column(nullable = false)
     public String username;
@@ -27,20 +29,20 @@ public class User extends PanacheEntity {
     public Role role = Role.USER;
 
     @Roles
-    public String getRole() {  // Single role; use Set<String> for multiples
-        return this.role.name();  // e.g., returns "USER" or "ADMIN"
+    public String getRole() {
+        return this.role.name();
     }
 
     public static User findByUsername(String u) {
-        return find("username", u).firstResult();
+        return find(USERNAME, u).firstResult();
     }
 
     public static boolean existsByUsername(String u) {
-        return find("username", u).firstResult() != null;
+        return find(USERNAME, u).firstResult() != null;
     }
 
     public static boolean existsByEmail(String e) {
-        return find("email", e).firstResult() != null;
+        return find(EMAIL, e).firstResult() != null;
     }
 }
 

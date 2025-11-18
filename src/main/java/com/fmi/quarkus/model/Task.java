@@ -2,11 +2,13 @@ package com.fmi.quarkus.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.*;
+import lombok.Getter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDate;
 
+@Getter
 @Entity
 public class Task extends PanacheEntity {
 
@@ -27,23 +29,4 @@ public class Task extends PanacheEntity {
     public User owner;
 
 
-    public String getTitle() {
-        return this.title;
-    }
-
-    public String getDescription() {
-        return this.description;
-    }
-
-    public LocalDate getDueDate() {
-        return this.dueDate;
-    }
-
-    public Status getStatus() {
-        return this.status;
-    }
-
-    public User getOwner() {
-        return this.owner;
-    }
 }

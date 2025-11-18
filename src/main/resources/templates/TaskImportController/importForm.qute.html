@@ -8,16 +8,23 @@
             <div class="card-body">
                 <h3 class="card-title mb-4">Import Tasks from CSV</h3>
 
-                {#if result}
+                {#if result??}
                 {#if result.importedCount > 0}
-                <div class="alert alert-success">
-                    Successfully imported {result.importedCount} task(s).
+                <div class="alert alert-success alert-banner mb-3">
+                    <i class="bi bi-check-circle-fill alert-icon-success"></i>
+                    <span class="alert-text">
+                            Successfully imported {result.importedCount} task(s)
+                        {#if result.filename != null && result.filename != ''}
+                        from <strong>{result.filename}</strong>{/if}.
+                        </span>
                 </div>
                 {/if}
-                {#if result.errors && result.errors.size() > 0}
-                <div class="alert alert-warning">
-                    <strong>Some rows failed:</strong>
-                    <ul class="mb-0">
+
+                {#if result.hasErrors()}
+                <div class="alert alert-warning alert-banner">
+                    <i class="bi bi-exclamation-triangle-fill alert-icon-warning"></i>
+                    <span class="alert-text">Some rows could not be imported:</span>
+                    <ul class="mb-0 mt-2">
                         {#for err in result.errors}
                         <li>{err}</li>
                         {/for}
@@ -31,7 +38,8 @@
                         <label for="file" class="form-label">CSV File</label>
                         <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
                         <div class="form-text">
-                            Required columns: <code>title</code>, optional: <code>description</code>, <code>dueDate</code> (YYYY-MM-DD), <code>status</code>
+                            Required columns: <code>title</code>, optional: <code>description</code>,
+                            <code>dueDate</code> (YYYY-MM-DD), <code>status</code>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Import</button>

@@ -2,6 +2,7 @@ package com.fmi.quarkus.web;
 
 import com.fmi.quarkus.dto.UserDto;
 import com.fmi.quarkus.service.UserService;
+import com.fmi.quarkus.util.CommonNames;
 import com.fmi.quarkus.util.Notice;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
@@ -18,10 +19,11 @@ import java.util.List;
 
 @Path("/admin/users")
 @Blocking
-@RolesAllowed("ADMIN")
+@RolesAllowed(CommonNames.ADMIN)
 @Produces(MediaType.TEXT_HTML)
 public class AdminController {
 
+    public static final String ADMIN_USERS_PATH = "/admin/users";
     @Inject
     SecurityIdentity identity;
 
@@ -71,16 +73,16 @@ public class AdminController {
 
         try {
             userService.deleteUserAsAdmin(id, admin);
-            return Response.seeOther(Notice.DELETED.redirectTo("/admin/users")).build();
+            return Response.seeOther(Notice.DELETED.redirectTo(ADMIN_USERS_PATH)).build();
 
         } catch (IllegalArgumentException ex) {
-            return Response.seeOther(Notice.SELF_DELETE.redirectTo("/admin/users")).build();
+            return Response.seeOther(Notice.SELF_DELETE.redirectTo(ADMIN_USERS_PATH)).build();
 
         } catch (IllegalStateException ex) {
-            return Response.seeOther(Notice.LAST_ADMIN.redirectTo("/admin/users")).build();
+            return Response.seeOther(Notice.LAST_ADMIN.redirectTo(ADMIN_USERS_PATH)).build();
 
         } catch (EntityNotFoundException ex) {
-            return Response.seeOther(Notice.NOT_FOUND.redirectTo("/admin/users")).build();
+            return Response.seeOther(Notice.NOT_FOUND.redirectTo(ADMIN_USERS_PATH)).build();
         }
     }
 

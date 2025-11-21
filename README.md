@@ -1,50 +1,90 @@
-Quarkus Security with JPA
-========================
+# TaskManager Quarkus – Secured Task Manager
 
-This guide demonstrates how your Quarkus application can use a database and JPA to store your user identities.
+A full-stack task management application built with **Quarkus 3.x** featuring true hybrid authentication:
 
-## Run quickstart in developer mode
+- Classic server-side web interface with form-based login
+- Modern REST API protected by **JWT (RS256)** at `/api/*`
 
-Quarkus provides developer mode, in which you can try this example. Just try:
+Perfect for browser users and third-party clients simultaneously.
 
-```bash
-mvn quarkus:dev
+**Source Code:** http://gitlab.hss.fmi.uni-sofia.bg/dimanas/secured_task_manager.git
+
+## Features
+
+- User registration & form-based login
+- Protected web pages (`/tasks/*`, `/profile/*`, `/admin/*`)
+- JWT-protected REST API (`/api/*`)
+- File uploads
+- Responsive HTML/CSS/JS frontend
+- PostgreSQL + Hibernate ORM + Panache
+
+## Project Structure (Important!)
+```
+textsecured_task_manager/
+├─ src/main/resources/keys/     ← only for local development
+├─ secrets/                     ← NEVER commit to Git! (created manually)
+├─ docker-compose.yml
+└─ ...
 ```
 
-[//]: # (todo)
-DIMANA NOTES
+## Generate JWT Key Pair (Required Once)
 
-Now the application will listen on `localhost:8080`.
-In developer mode quarkus will also start its own postgres database.
+Run these commands in the project root:
 
-## Run quickstart in JVM mode
+```bash
+## Create secrets directory
+mkdir -p secrets
 
-## Run (Docker, prod profile)
+## Generate 2048-bit RSA private key (PKCS#8 – the format Quarkus expects)
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out secrets/privateKey.pem
 
-1) Create keys (once):
-   openssl genrsa -out secrets/privateKey.pem 2048
-   openssl rsa -in secrets/privateKey.pem -pubout -out secrets/publicKey.pem
+## Extract the matching public key
+openssl rsa -pubout -in secrets/privateKey.pem -out secrets/publicKey.pem
 
-sql
-Copy code
+## Also copy public key for local dev (optional but convenient)
+cp secrets/publicKey.pem src/main/resources/keys/
+```
 
-2) Build & start:
-   docker compose build
-   docker compose up -d
+**Important:** `secrets/privateKey.pem` must **never** be committed to Git!
 
-javascript
-Copy code
+## Local Development (Dev Mode)
 
-3) Open http://localhost:8080
+### Requirements
+- JDK 21
+- Maven 3.9+
+- Docker + docker-compose (optional but recommended)
 
-Notes:
-- The app reads JWT keys from `/opt/keys` inside the container (mounted from `./secrets`).
-- Dev mode (`mvn quarkus:dev`) uses demo keys on the classpath; prod uses the mounted keys.
+### Run
 
+```
+bash
+# Start PostgreSQL (optional – Quarkus can start it automatically in dev)
+docker compose up db -d
 
-1. Set ENV: export DB_HOST=localhost DB_PORT=5432 DB_NAME=tm-quarkus DB_USER=postgres DB_PASS=his_pass DB_TIMEZONE=Europe/Kyiv
-2. Ensure Postgres running + keys/*.pem in src/main/resources.
-3. Build: mvn clean package
-4. Run: java -jar target/quarkus-run.jar
-5. Access: http://server:8081
-6. Disable embedded users if using real DB auth: Comment out quarkus.security.users.embedded.*
+# Start the app with hot-reload
+./mvnw quarkus:dev
+
+```
+
+Open → http://localhost:8080
+Form login and JWT API work immediately.
+
+## Production / Server Deployment
+### Requirements
+
+Docker & docker-compose
+
+### Run
+```
+Bash 
+ Make sure secrets/ contains both publicKey.pem and privateKey.pem
+# (generated in the step above)
+
+docker compose up --build
+```
+The application starts in production mode and is available at http://localhost:8080
+The container automatically:
+
+- Connects to PostgreSQL
+- Mounts the secrets/ folder
+- Uses the keys at runtime (private key never leaves the host)

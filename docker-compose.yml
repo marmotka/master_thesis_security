@@ -1,12 +1,13 @@
-#version: '3.9'
+version: '3.9'
+
 services:
   postgres:
     image: postgres:15
-    container_name: taskmanager-db
+    container_name: tms-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: taskmanager
+      POSTGRES_DB: tm-spring
       TZ: UTC
     ports:
       - "5432:5432"
@@ -15,34 +16,45 @@ services:
     networks:
       - tasknet
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d tm-spring" ]
       interval: 5s
-      retries: 5
-
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: taskmanager-app
+    image: taskmanager-spring:latest
+    container_name: tms-app
+    depends_on:
+      postgres:
+        condition: service_healthy
 
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/taskmanager
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tm-spring
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      # toggle debug mode ON/OFF by commenting/uncommenting this:
-      DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
-      JWT_SECRET: supersecretjwtkey123456789
-    depends_on:
-      - postgres
+
+      # JWT secret (for dev only, move to .env / secrets for real deployment)
+      JWT_SECRET: ${JWT_SECRET:supersecretjwtkey123456789}
+
+
+      # OPTIONAL: enable remote debug only when needed
+      # JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+
     ports:
-      - "8080:8080"   # app port
-      - "5005:5005"   # debug port
+      - "8080:8080"
+      # uncomment when debugging:
+      # - "5005:5005"
     networks:
       - tasknet
+    restart: unless-stopped   # safer in case of crash
 
 volumes:
   pgdata:
 
 networks:
   tasknet:
+    driver: bridge

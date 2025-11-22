@@ -34,9 +34,11 @@ public class UserService implements UserDetailsService {
     }
 
     public User register(RegisterRequest request) throws DuplicateUserException {
-        // Check if email already exists
         if (findByEmail(request.getEmail()).isPresent()) {
-            throw new DuplicateUserException("User with this email already exists");
+            throw new DuplicateUserException("User with this email already exists", "email");
+        }
+        if (findByUsername(request.getUsername()).isPresent()) {
+            throw new DuplicateUserException("User with this username already exists", "username");
         }
         User user = new User();
         user.setUsername(request.getUsername());

@@ -1,11 +1,14 @@
 package com.fmi.spring.security.service;
 
+import com.fmi.spring.security.model.Status;
 import com.fmi.spring.security.model.Task;
 import com.fmi.spring.security.model.User;
 import com.fmi.spring.security.repository.TaskRepository;
 import com.fmi.spring.security.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Comparator;
 import java.util.List;
 
 @Service

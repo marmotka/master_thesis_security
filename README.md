@@ -2,12 +2,14 @@
 
 A full-stack task management application built with **Quarkus 3.x** featuring true hybrid authentication:
 
-- Classic server-side web interface with form-based login
-- Modern REST API protected by **JWT (RS256)** at `/api/*`
+- Classic form-based login for browser users  
+- JWT-protected REST API (`/api/**`) for mobile/SPA clients  
+- Role-based access control (USER / ADMIN)
 
 Perfect for browser users and third-party clients simultaneously.
 
-**Source Code:** http://gitlab.hss.fmi.uni-sofia.bg/dimanas/secured_task_manager.git
+**Source Code:** [http://gitlab.hss.fmi.uni-sofia.bg/dimanas/secured_task_manager.git](https://github.com/marmotka/master_thesis_security/blob/quarkus-task-manager/README.md)
+
 
 ## Features
 
@@ -18,6 +20,20 @@ Perfect for browser users and third-party clients simultaneously.
 - Responsive HTML/CSS/JS frontend
 - PostgreSQL + Hibernate ORM + Panache
 - Docker + docker-compose ready
+
+## Tech Stack
+
+| Layer               | Technology                                    |
+|---------------------|-----------------------------------------------|
+| Framework           | Quarkus 3.x (fast-jar)                        |
+| Reactive/Core       | Vert.x                                        |
+| Security            | SmallRye JWT (RS256) + Form Authentication    |
+| Persistence         | Hibernate ORM with Panache                    |
+| Database            | PostgreSQL                                    |
+| Build Tool          | Maven                                         |
+| Templating          | Qute                                          |
+| Containerization    | Docker + docker-compose                       |
+| JWT Keys            | RSA 2048-bit (PKCS#8)                         |
 
 ## Project Structure (Important!)
 ```

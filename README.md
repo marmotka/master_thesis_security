@@ -17,6 +17,7 @@ Perfect for browser users and third-party clients simultaneously.
 - File uploads
 - Responsive HTML/CSS/JS frontend
 - PostgreSQL + Hibernate ORM + Panache
+- Docker + docker-compose ready
 
 ## Project Structure (Important!)
 ```

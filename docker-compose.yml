@@ -37,19 +37,16 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
 
-      # JWT secret (for dev only, move to .env / secrets for real deployment)
-      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey123456789123456789123456789}
-
 
       # OPTIONAL: enable remote debug only when needed
-      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+#      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 
     ports:
       - "8080:8080"
       - "5005:5005"
     networks:
       - tasknet
-    restart: unless-stopped   # safer in case of crash
+    restart: unless-stopped
 
 volumes:
   pgdata:

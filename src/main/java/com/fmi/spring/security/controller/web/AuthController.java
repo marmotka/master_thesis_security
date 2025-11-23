@@ -60,11 +60,9 @@ public class AuthController {
                                 Model model) {
 
         if (error != null) {
-            log.error(error);
             model.addAttribute(ERROR, "Invalid username or password");
         }
         if (logout != null) {
-            log.error(error);
             model.addAttribute(MESSAGE, "You have been logged out successfully");
         }
         if (registered != null && registered.equals("true")) {

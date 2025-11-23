@@ -44,20 +44,26 @@
                                 <div class="mb-3">
                                     <label for="currentPassword" class="form-label">Current password</label>
                                     <div class="input-group">
-                                        <input id="currentPassword" th:field="*{currentPassword}" type="password" class="form-control"
-                                               required autocomplete="current-password" placeholder="Enter current password">
+                                        <input id="currentPassword" th:field="*{currentPassword}" type="password"
+                                               class="form-control"
+                                               required autocomplete="current-password"
+                                               placeholder="Enter current password">
                                         <button class="btn btn-outline-secondary" type="button"
-                                                onclick="toggleVis('currentPassword', this)">Show</button>
+                                                onclick="toggleVis('currentPassword', this)">Show
+                                        </button>
                                     </div>
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="newPassword" class="form-label">New password</label>
                                     <div class="input-group">
-                                        <input id="newPassword" th:field="*{newPassword}" type="password" class="form-control"
-                                               required minlength="8" autocomplete="new-password" placeholder="Min 8 characters">
+                                        <input id="newPassword" th:field="*{newPassword}" type="password"
+                                               class="form-control"
+                                               required minlength="8" autocomplete="new-password"
+                                               placeholder="Min 8 characters">
                                         <button class="btn btn-outline-secondary" type="button"
-                                                onclick="toggleVis('newPassword', this)">Show</button>
+                                                onclick="toggleVis('newPassword', this)">Show
+                                        </button>
                                     </div>
                                     <div class="form-text">Use at least 8 characters.</div>
                                 </div>
@@ -65,15 +71,18 @@
                                 <div class="mb-3">
                                     <label for="confirmPassword" class="form-label">Confirm new password</label>
                                     <div class="input-group">
-                                        <input id="confirmPassword" th:field="*{confirmPassword}" type="password" class="form-control"
+                                        <input id="confirmPassword" th:field="*{confirmPassword}" type="password"
+                                               class="form-control"
                                                required autocomplete="new-password" placeholder="Repeat new password">
                                         <button class="btn btn-outline-secondary" type="button"
-                                                onclick="toggleVis('confirmPassword', this)">Show</button>
+                                                onclick="toggleVis('confirmPassword', this)">Show
+                                        </button>
                                     </div>
                                     <p id="pwMatchHelp" class="small mt-1"></p>
 
                                     <!-- server-side error slot if you add one -->
-                                    <p class="text-danger small mb-0" th:if="${passwordError}" th:text="${passwordError}"></p>
+                                    <p class="text-danger small mb-0" th:if="${passwordError}"
+                                       th:text="${passwordError}"></p>
                                 </div>
 
                                 <button type="submit" class="btn btn-primary">Update password</button>
@@ -82,66 +91,67 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- helpers -->
-            <script>
-                function toggleVis(id, btn) {
-                  const input = document.getElementById(id);
-                  if (!input) return;
-                  const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                  input.setAttribute('type', type);
-                  btn.textContent = type === 'password' ? 'Show' : 'Hide';
+        <!-- helpers -->
+        <script>
+            function toggleVis(id, btn) {
+              const input = document.getElementById(id);
+              if (!input) return;
+              const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+              input.setAttribute('type', type);
+              btn.textContent = type === 'password' ? 'Show' : 'Hide';
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+              const form = document.getElementById('passwordForm');
+              const np = document.getElementById('newPassword');
+              const cp = document.getElementById('confirmPassword');
+              const hint = document.getElementById('pwMatchHelp');
+              const collapse = document.getElementById('changePassword');
+
+              const updateHint = () => {
+                if (!np.value && !cp.value) { hint.textContent = ''; hint.className = 'small mt-1'; return; }
+                if (np.value === cp.value) {
+                  hint.textContent = 'Passwords match ✔';
+                  hint.className = 'small mt-1 text-success';
+                } else {
+                  hint.textContent = 'Passwords do not match';
+                  hint.className = 'small mt-1 text-danger';
                 }
+              };
 
-                document.addEventListener('DOMContentLoaded', () => {
-                  const form = document.getElementById('passwordForm');
-                  const np = document.getElementById('newPassword');
-                  const cp = document.getElementById('confirmPassword');
-                  const hint = document.getElementById('pwMatchHelp');
-                  const collapse = document.getElementById('changePassword');
+              const setValidity = () => {
+                // length
+                if (np.value && np.value.length < 8) {
+                  np.setCustomValidity('Password must be at least 8 characters.');
+                } else {
+                  np.setCustomValidity('');
+                }
+                // match
+                if (cp.value && cp.value !== np.value) {
+                  cp.setCustomValidity('Passwords do not match.');
+                } else {
+                  cp.setCustomValidity('');
+                }
+              };
 
-                  const updateHint = () => {
-                    if (!np.value && !cp.value) { hint.textContent = ''; hint.className = 'small mt-1'; return; }
-                    if (np.value === cp.value) {
-                      hint.textContent = 'Passwords match ✔';
-                      hint.className = 'small mt-1 text-success';
-                    } else {
-                      hint.textContent = 'Passwords do not match';
-                      hint.className = 'small mt-1 text-danger';
-                    }
-                  };
+              const validate = () => { updateHint(); setValidity(); };
 
-                  const setValidity = () => {
-                    // length
-                    if (np.value && np.value.length < 8) {
-                      np.setCustomValidity('Password must be at least 8 characters.');
-                    } else {
-                      np.setCustomValidity('');
-                    }
-                    // match
-                    if (cp.value && cp.value !== np.value) {
-                      cp.setCustomValidity('Passwords do not match.');
-                    } else {
-                      cp.setCustomValidity('');
-                    }
-                  };
+              np.addEventListener('input', validate);
+              cp.addEventListener('input', validate);
 
-                  const validate = () => { updateHint(); setValidity(); };
-
-                  np.addEventListener('input', validate);
-                  cp.addEventListener('input', validate);
-
-                  form.addEventListener('submit', (e) => {
-                    validate();
-                    if (!form.checkValidity()) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      // keep the panel open so the user sees errors
-                      collapse.classList.add('show');
-                    }
-                  });
-                });
-            </script>
+              form.addEventListener('submit', (e) => {
+                validate();
+                if (!form.checkValidity()) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // keep the panel open so the user sees errors
+                  collapse.classList.add('show');
+                }
+              });
+            });
+        </script>
 
     </th:block>
 </th:block>

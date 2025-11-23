@@ -69,6 +69,10 @@ public class TaskService {
         taskRepository.delete(task);
     }
 
+    public void saveTask(Task task){
+        taskRepository.save(task);
+    }
+
         private int getStatusPriority(Status status) {
         if (status == null) {
             return 4;

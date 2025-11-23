@@ -21,6 +21,7 @@ public class AuthController {
     public static final String REQUEST = "request";
     public static final String MESSAGE = "message";
     public static final String ERROR = "error";
+
     @Autowired
     private UserService userService;
 

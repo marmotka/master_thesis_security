@@ -54,12 +54,15 @@ secured_task_manager_spring/
 
 ### Run
 
-```bash
+```
 # Start PostgreSQL 
 docker compose up db -d
 
 # Run the application 
 ./mvnw spring-boot:run
+
+# Run the application in debug mode
+./mvnw spring-boot:run -D'spring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"'
 ```
 Open → http://localhost:8080
 Form login and API work immediately.

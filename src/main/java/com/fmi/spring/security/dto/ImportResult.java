@@ -1,6 +1,5 @@
 package com.fmi.spring.security.dto;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 

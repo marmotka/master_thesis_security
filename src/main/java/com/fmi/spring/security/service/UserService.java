@@ -91,4 +91,7 @@ public class UserService implements UserDetailsService {
     }
 
 
+    public boolean existsByUsername(String userName) {
+        return findByUsername(userName).isPresent();
+    }
 }

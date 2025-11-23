@@ -22,6 +22,10 @@ public class TaskImportApiResponse {
         this.message = message;
     }
 
+    public static TaskImportApiResponse error(String filename, String message) {
+        return new TaskImportApiResponse(false, filename, 0, null, message);
+    }
+
     public boolean isSuccess() {
         return success;
     }
